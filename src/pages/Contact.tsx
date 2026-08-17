@@ -36,9 +36,15 @@ export default function Contact() {
             </p>
 
             <div className="mt-9 space-y-5">
-              <a href="tel:+551133428800" className="flex gap-4 items-start group">
+              <a
+                href="https://wa.me/5567996399355"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex gap-4 items-start group"
+              >
+         
                 <span className="w-10 h-10 rounded-xl bg-white border border-[#e4ebe5] flex items-center justify-center text-[#16a34a] group-hover:bg-[#dcfce7] transition-colors"><Phone size={17} /></span>
-                <span><span className="block text-sm font-semibold">Telefone</span><span className="block text-sm text-[#6b7280] mt-0.5">(11) 3342-8800</span></span>
+                <span><span className="block text-sm font-semibold">Telefone</span><span className="block text-sm text-[#6b7280] mt-0.5">(67) 99639-9355</span></span>
               </a>
               <a href="mailto:contato@patinhaspetshop.com.br" className="flex gap-4 items-start group">
                 <span className="w-10 h-10 rounded-xl bg-white border border-[#e4ebe5] flex items-center justify-center text-[#16a34a] group-hover:bg-[#dcfce7] transition-colors"><Mail size={17} /></span>
@@ -46,7 +52,7 @@ export default function Contact() {
               </a>
               <div className="flex gap-4 items-start">
                 <span className="w-10 h-10 rounded-xl bg-white border border-[#e4ebe5] flex items-center justify-center text-[#16a34a]"><MapPin size={17} /></span>
-                <span><span className="block text-sm font-semibold">Visite a loja</span><span className="block text-sm text-[#6b7280] mt-0.5">Rua das Magnólias, 412 — Vila Madalena, São Paulo</span></span>
+                <span><span className="block text-sm font-semibold">Visite a loja</span><span className="block text-sm text-[#6b7280] mt-0.5">Marcelino Pires, 2116 — Centro, Dourados - MS</span></span>
               </div>
               <div className="flex gap-4 items-start">
                 <span className="w-10 h-10 rounded-xl bg-white border border-[#e4ebe5] flex items-center justify-center text-[#16a34a]"><Clock3 size={17} /></span>

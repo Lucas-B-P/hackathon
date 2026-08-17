@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router"
-import { Eye, EyeOff, Lock, Mail, PawPrint } from "lucide-react"
-import dogHero from "../img/dog-hero.jpg"
+import { Eye, EyeOff, Lock, Mail } from "lucide-react"
+import AuthSidebar from "../components/AuthSidebar"
+import AuthMobileLogo from "../components/AuthMobileLogo"
 import { login } from "../services/api"
 
 export default function Login() {
@@ -29,74 +30,21 @@ export default function Login() {
 
   return (
     <div className="auth-page-enter min-h-screen flex flex-col lg:flex-row">
-      {/* Left panel — hidden on mobile, shown on lg+ */}
-      <div
-        className="hidden lg:flex flex-col justify-between lg:w-[440px] xl:w-[480px] bg-[#15803d] flex-shrink-0 relative overflow-hidden"
-        style={{ padding: "48px", margin: "-2px -1px -2px -1px" }}
-      >
-        <div>
-          <div className="flex items-center gap-3 mb-12">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <PawPrint size={22} className="text-white" />
-            </div>
-            <div>
-              <span className="text-white font-bold text-xl" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                Patinhas
-              </span>
-              <span className="text-green-300 font-medium ml-1.5">Pet Shop</span>
-            </div>
-          </div>
+      <AuthSidebar
+        title="Bem-vindo ao portal exclusivo para tutores"
+        description="Acompanhe seus pets, agende serviços, acompanhe pedidos e muito mais, tudo em um só lugar."
+        featuresLabel="O que você pode fazer aqui"
+        features={[
+          "Agendar banho, tosa e consultas",
+          "Acompanhar o histórico dos seus pets",
+          "Visualizar e rastrear seus pedidos",
+          "Gerenciar dados e preferências",
+        ]}
+      />
 
-          <div className="pt-10">
-            <h2 className="text-white text-3xl font-bold leading-tight mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              Bem-vindo ao portal exclusivo para tutores
-            </h2>
-            <p className="text-green-200 text-base leading-relaxed mb-10">
-              Acompanhe seus pets, agende serviços, acompanhe pedidos e muito mais, tudo em um só lugar.
-            </p>
-
-            <div className="space-y-3">
-            <p className="text-green-300 text-xs font-semibold uppercase tracking-wider">
-              O que você pode fazer aqui
-            </p>
-            <div className="space-y-2">
-              {[
-                "Agendar banho, tosa e consultas",
-                "Acompanhar o histórico dos seus pets",
-                "Visualizar e rastrear seus pedidos",
-                "Gerenciar dados e preferências",
-              ].map((item) => (
-                <div key={item} className="flex items-center gap-2.5 text-green-100 text-sm">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
-                  {item}
-                </div>
-              ))}
-            </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-auto -mx-14 -mb-12 overflow-hidden rounded-t-[65px]">
-          <img
-            src={dogHero}
-            alt="Golden Retriever — tudo para o amor do seu pet"
-            className="w-full h-[350px] object-cover object-top scale-105"
-          />
-        </div>
-      </div>
-
-      {/* Right panel */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-[#f9fafb] min-h-screen lg:min-h-0">
         <div className="w-full max-w-[380px]">
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2 mb-10 lg:hidden">
-            <div className="w-9 h-9 rounded-xl bg-[#16a34a] flex items-center justify-center">
-              <PawPrint size={18} className="text-white" />
-            </div>
-            <span className="font-bold text-lg text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              Patinhas Pet Shop
-            </span>
-          </div>
+          <AuthMobileLogo />
 
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-[#111827] mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
