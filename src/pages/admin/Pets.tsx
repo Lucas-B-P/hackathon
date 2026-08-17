@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Plus, X } from "lucide-react";
-import { pets } from "../../data/mockData";
+import { getAdminPets, type AdminPet } from "../../services/api";
 
 const petHistory = [
   { tipo: "Banho + Tosa", data: "08/08/2026", obs: "Comportamento calmo" },
@@ -11,11 +11,13 @@ const petHistory = [
 
 export default function Pets() {
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<typeof pets[0] | null>(null);
+  const [pets, setPets] = useState<AdminPet[]>([]);
+  const [selected, setSelected] = useState<AdminPet | null>(null);
+  useEffect(() => { getAdminPets().then((result) => setPets(result.data)).catch(() => setPets([])); }, []);
   const filtered = pets.filter(p =>
-    p.nome.toLowerCase().includes(search.toLowerCase()) ||
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
     p.tutor.toLowerCase().includes(search.toLowerCase()) ||
-    p.raca.toLowerCase().includes(search.toLowerCase())
+    (p.breed ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -51,12 +53,12 @@ export default function Pets() {
           >
             <div className="flex items-start gap-3">
               <div className="w-12 h-12 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-2xl flex-shrink-0">
-                {p.foto}
+                🐾
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-[#111827] text-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{p.nome}</p>
-                <p className="text-xs text-[#6b7280]">{p.raca}</p>
-                <p className="text-xs text-[#9ca3af] mt-0.5">{p.especie} · {p.sexo} · {p.idade}</p>
+                <p className="font-bold text-[#111827] text-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{p.name}</p>
+                <p className="text-xs text-[#6b7280]">{p.breed || "Sem raça"}</p>
+                <p className="text-xs text-[#9ca3af] mt-0.5">{p.species} · {p.sex || "Não informado"}</p>
               </div>
             </div>
             <div className="mt-3 pt-3 border-t border-[#f3f4f6] flex items-center justify-between">
@@ -66,7 +68,7 @@ export default function Pets() {
               </div>
               <div className="text-right">
                 <p className="text-[11px] text-[#9ca3af]">Último atend.</p>
-                <p className="text-xs font-medium text-[#374151]">{p.ultimoAtendimento}</p>
+                <p className="text-xs font-medium text-[#374151]">Sem registro</p>
               </div>
             </div>
           </div>
@@ -79,10 +81,10 @@ export default function Pets() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-[#f3f4f6]">
               <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-3xl">{selected.foto}</div>
+                <div className="w-14 h-14 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-3xl">🐾</div>
                 <div>
-                  <h2 className="text-xl font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{selected.nome}</h2>
-                  <p className="text-sm text-[#6b7280]">{selected.raca} · {selected.especie}</p>
+                  <h2 className="text-xl font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{selected.name}</h2>
+                  <p className="text-sm text-[#6b7280]">{selected.breed || "Sem raça"} · {selected.species}</p>
                 </div>
               </div>
               <button onClick={() => setSelected(null)} className="p-2 hover:bg-[#f3f4f6] rounded-xl text-[#9ca3af]"><X size={20} /></button>
@@ -91,10 +93,9 @@ export default function Pets() {
               <div className="space-y-3">
                 <h3 className="text-xs font-semibold text-[#9ca3af] uppercase tracking-wide">Informações</h3>
                 {[
-                  ["Sexo", selected.sexo],
-                  ["Nascimento", selected.nascimento],
-                  ["Idade", selected.idade],
-                  ["Peso", selected.peso],
+                  ["Sexo", selected.sex || "Não informado"],
+                  ["Nascimento", selected.birth_date || "Não informado"],
+                  ["Peso", selected.weight ? `${selected.weight} kg` : "Não informado"],
                   ["Tutor", selected.tutor],
                 ].map(([k, v]) => (
                   <div key={k} className="flex items-center justify-between py-1.5 border-b border-[#f3f4f6]">

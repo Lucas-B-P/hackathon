@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Plus, ChevronRight, Filter } from "lucide-react";
-import { clientes } from "../../data/mockData";
+import { getAdminClients, type AdminClient } from "../../services/api";
 
 export default function Clientes() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("Todos");
+  const [clientes, setClientes] = useState<AdminClient[]>([]);
+  useEffect(() => { getAdminClients().then((result) => setClientes(result.data)).catch(() => setClientes([])); }, []);
   const filtered = clientes.filter(c =>
     (c.nome.toLowerCase().includes(search.toLowerCase()) || c.telefone.includes(search)) &&
     (statusFilter === "Todos" || c.status === statusFilter)

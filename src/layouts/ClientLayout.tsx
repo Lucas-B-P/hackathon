@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import { Home, Calendar, ShoppingBag, Dog, User, LogOut, Bell, Store, PawPrint, Check, Tag, Clock, Stethoscope } from "lucide-react";
-import { getNotifications, markAllNotificationsRead, markNotificationRead, type Notification } from "../services/api";
+import { clearToken, getMe, getNotifications, markAllNotificationsRead, markNotificationRead, type Notification } from "../services/api";
 
 const navItems = [
   { to: "/portal", label: "Início", icon: Home, end: true },
@@ -64,7 +64,13 @@ export default function ClientLayout() {
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const notifRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!localStorage.getItem("patinhas_access_token")) { navigate("/", { replace: true }); return; }
+    getMe().then(() => setSessionLoading(false)).catch(() => { clearToken(); navigate("/", { replace: true }); });
+  }, [navigate]);
 
   useEffect(() => {
     const loadNotifications = () => getNotifications().then((result) => setNotifications(result.data)).catch(() => setNotifications([]));
@@ -80,6 +86,8 @@ export default function ClientLayout() {
   }, []);
 
   const unreadCount = notifications.filter((notification) => !notification.read_at).length;
+
+  if (sessionLoading) return <div className="min-h-screen bg-[#f9fafb] flex items-center justify-center text-sm text-[#6b7280]">Validando sessão...</div>;
 
   function markAllRead() {
     markAllNotificationsRead().then(() => setNotifications((items) => items.map((item) => ({ ...item, read_at: new Date().toISOString() }))));

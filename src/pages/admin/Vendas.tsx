@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Search, ShoppingCart, Plus, Minus, Trash2, X, Check } from "lucide-react";
 import { produtos } from "../../data/mockData";
+import { createAdminSale } from "../../services/api";
 
 type CartItem = { id: number; nome: string; preco: number; qty: number };
 type PayModal = { open: boolean; metodo: string };
@@ -35,7 +36,8 @@ export default function Vendas() {
 
   const total = cart.reduce((a, i) => a + i.preco * i.qty, 0);
 
-  const finalizarVenda = () => {
+  const finalizarVenda = async () => {
+    await createAdminSale({ itens: cart.map((item) => ({ produtoId: item.id, quantidade: item.qty })), formaPagamento: payModal.metodo });
     setPayModal({ open: false, metodo: "PIX" });
     setSuccess(true);
     setCart([]);

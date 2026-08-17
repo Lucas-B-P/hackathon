@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Download, BarChart2 } from "lucide-react";
-import { faturamentoMensal, vendasCategoria } from "../../data/mockData";
+import { getAdminReports, type AdminReports } from "../../services/api";
 
 const CATS = ["Vendas", "Financeiro", "Estoque", "Produtos", "Serviços", "Clientes", "Pets", "Funcionários"];
 const COLORS = ["#16a34a", "#86efac", "#4ade80", "#bbf7d0", "#dcfce7"];
@@ -18,6 +18,10 @@ const servicosData = [
 export default function Relatorios() {
   const [cat, setCat] = useState("Vendas");
   const [periodo, setPeriodo] = useState("mes");
+  const [reports, setReports] = useState<AdminReports | null>(null);
+  useEffect(() => { getAdminReports().then((result) => setReports(result.data)).catch(() => setReports(null)); }, []);
+  const faturamentoMensal = reports?.revenue ?? [];
+  const servicosData = reports?.services ?? [];
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -131,7 +135,7 @@ export default function Relatorios() {
                   <td className="px-4 py-3 font-semibold text-[#111827]">R$ {lucro.toLocaleString("pt-BR")}</td>
                   <td className="px-4 py-3">
                     <span className="text-xs bg-[#dcfce7] text-[#15803d] px-2 py-0.5 rounded-full font-medium">
-                      +{((lucro / m.despesas) * 100).toFixed(0)}%
+                      {m.despesas > 0 ? `+${((lucro / m.despesas) * 100).toFixed(0)}%` : "—"}
                     </span>
                   </td>
                 </tr>

@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Plus, AlertTriangle } from "lucide-react";
-import { produtos } from "../../data/mockData";
+import { getAdminProducts, type AdminProduct } from "../../services/api";
 
 export default function Produtos() {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("Todos");
+  const [produtos, setProdutos] = useState<AdminProduct[]>([]);
+  useEffect(() => { getAdminProducts().then((result) => setProdutos(result.data)).catch(() => setProdutos([])); }, []);
 
-  const cats = ["Todos", ...Array.from(new Set(produtos.map(p => p.categoria)))];
+  const cats = ["Todos", ...Array.from(new Set(produtos.map(p => p.category)))];
   const filtered = produtos.filter(p =>
-    p.nome.toLowerCase().includes(search.toLowerCase()) &&
-    (catFilter === "Todos" || p.categoria === catFilter)
+    p.name.toLowerCase().includes(search.toLowerCase()) &&
+    (catFilter === "Todos" || p.category === catFilter)
   );
 
   return (
@@ -59,26 +61,26 @@ export default function Produtos() {
           </thead>
           <tbody className="divide-y divide-[#f3f4f6]">
             {filtered.map(p => {
-              const low = p.estoque <= p.estoqueMin;
-              const zero = p.estoque === 0;
+              const low = p.stock <= p.minimum_stock;
+              const zero = p.stock === 0;
               return (
                 <tr key={p.id} className="hover:bg-[#fafafa] transition-colors cursor-pointer">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       {low && <AlertTriangle size={13} className={zero ? "text-red-500" : "text-orange-400"} />}
-                      <span className="font-medium text-[#111827]">{p.nome}</span>
+                      <span className="font-medium text-[#111827]">{p.name}</span>
                     </div>
                   </td>
                   <td className="hidden md:table-cell px-4 py-3 font-mono text-xs text-[#6b7280]">{p.sku}</td>
                   <td className="px-4 py-3">
-                    <span className="text-xs bg-[#f3f4f6] text-[#374151] px-2 py-0.5 rounded-full">{p.categoria}</span>
+                    <span className="text-xs bg-[#f3f4f6] text-[#374151] px-2 py-0.5 rounded-full">{p.category}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`text-sm font-bold ${zero ? "text-red-500" : low ? "text-orange-500" : "text-[#111827]"}`}>{p.estoque}</span>
+                    <span className={`text-sm font-bold ${zero ? "text-red-500" : low ? "text-orange-500" : "text-[#111827]"}`}>{p.stock}</span>
                   </td>
-                  <td className="hidden md:table-cell px-4 py-3 text-xs text-[#9ca3af]">{p.estoqueMin}</td>
-                  <td className="hidden md:table-cell px-4 py-3 text-xs text-[#6b7280]">R$ {p.custo.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-sm font-semibold text-[#111827]">R$ {p.venda.toFixed(2)}</td>
+                  <td className="hidden md:table-cell px-4 py-3 text-xs text-[#9ca3af]">{p.minimum_stock}</td>
+                  <td className="hidden md:table-cell px-4 py-3 text-xs text-[#6b7280]">R$ {Number(p.cost).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-sm font-semibold text-[#111827]">R$ {Number(p.sale_price).toFixed(2)}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${zero ? "bg-red-100 text-red-600" : low ? "bg-orange-50 text-orange-500" : "bg-[#dcfce7] text-[#15803d]"}`}>
                       {zero ? "Esgotado" : low ? "Baixo" : "Normal"}

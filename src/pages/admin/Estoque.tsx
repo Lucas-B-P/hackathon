@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { Package, TrendingDown, AlertTriangle, DollarSign, Plus } from "lucide-react";
-import { produtos, movimentacoesEstoque } from "../../data/mockData";
+import { getAdminStock, type AdminStock } from "../../services/api";
 
 const TIPO_COLORS: Record<string, string> = {
   Entrada: "bg-[#dcfce7] text-[#15803d]",
@@ -9,6 +10,10 @@ const TIPO_COLORS: Record<string, string> = {
 };
 
 export default function Estoque() {
+  const [stock, setStock] = useState<AdminStock | null>(null);
+  useEffect(() => { getAdminStock().then((result) => setStock(result.data)).catch(() => setStock(null)); }, []);
+  const produtos = stock?.products.map((item) => ({ id: item.id, nome: item.name, sku: item.sku, estoque: item.stock, estoqueMin: item.minimum_stock, custo: Number(item.cost) })) ?? [];
+  const movimentacoesEstoque = stock?.movements.map((item) => ({ id: item.id, produto: item.product, tipo: item.type === "SAIDA" ? "Saída" : item.type === "ENTRADA" ? "Entrada" : "Ajuste", quantidade: item.quantity, motivo: item.reason || "—", usuario: "Sistema", data: new Date(item.created_at).toLocaleDateString("pt-BR") })) ?? [];
   const total = produtos.reduce((a, p) => a + p.estoque, 0);
   const baixo = produtos.filter(p => p.estoque > 0 && p.estoque <= p.estoqueMin).length;
   const zero = produtos.filter(p => p.estoque === 0).length;

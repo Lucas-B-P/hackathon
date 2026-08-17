@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
-import { funcionarios } from "../../data/mockData";
+import { getAdminEmployees, type AdminEmployee } from "../../services/api";
 
 const CARGO_COLORS: Record<string, string> = {
   Administrador: "bg-violet-100 text-violet-700",
@@ -22,6 +22,8 @@ const PERMISSIONS = [
 
 export default function Funcionarios() {
   const [tab, setTab] = useState<"lista" | "permissoes">("lista");
+  const [funcionarios, setFuncionarios] = useState<AdminEmployee[]>([]);
+  useEffect(() => { getAdminEmployees().then((result) => setFuncionarios(result.data)).catch(() => setFuncionarios([])); }, []);
 
   return (
     <div className="p-4 md:p-6 space-y-5">
@@ -47,19 +49,19 @@ export default function Funcionarios() {
             <div key={f.id} className="bg-white rounded-xl border border-[#e5e7eb] shadow-sm p-5 hover:border-[#86efac] hover:shadow-md transition-all cursor-pointer">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-11 h-11 rounded-full bg-[#dcfce7] flex items-center justify-center text-sm font-bold text-[#15803d]">
-                  {f.nome.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                  {f.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
                 </div>
                 <div>
-                  <p className="font-bold text-[#111827] text-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{f.nome}</p>
-                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${CARGO_COLORS[f.cargo] || "bg-gray-100 text-gray-500"}`}>{f.cargo}</span>
+                  <p className="font-bold text-[#111827] text-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{f.name}</p>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${CARGO_COLORS[f.role] || "bg-gray-100 text-gray-500"}`}>{f.role}</span>
                 </div>
               </div>
               <div className="space-y-1.5 border-t border-[#f3f4f6] pt-3">
-                <p className="text-xs text-[#9ca3af]">{f.telefone}</p>
+                <p className="text-xs text-[#9ca3af]">{f.phone || "Telefone não informado"}</p>
                 <p className="text-xs text-[#9ca3af]">{f.email}</p>
               </div>
               <div className="mt-3 flex items-center justify-between">
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${f.status === "Ativo" ? "bg-[#dcfce7] text-[#15803d]" : "bg-gray-100 text-gray-500"}`}>{f.status}</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${f.status === "active" ? "bg-[#dcfce7] text-[#15803d]" : "bg-gray-100 text-gray-500"}`}>{f.status === "active" ? "Ativo" : "Inativo"}</span>
               </div>
             </div>
           ))}

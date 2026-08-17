@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { TrendingUp, TrendingDown, DollarSign, AlertCircle, Plus } from "lucide-react";
-import { faturamentoMensal, contasReceber, contasPagar } from "../../data/mockData";
+import { getAdminFinance, type AdminFinance } from "../../services/api";
 
 const STATUS_CR: Record<string, string> = {
   Pendente: "bg-amber-50 text-amber-600",
@@ -14,12 +14,18 @@ const STATUS_CP: Record<string, string> = {
 
 export default function Financeiro() {
   const [tab, setTab] = useState<"receber" | "pagar">("receber");
+  const [finance, setFinance] = useState<AdminFinance | null>(null);
+  useEffect(() => { getAdminFinance().then((result) => setFinance(result.data)).catch(() => setFinance(null)); }, []);
+  const faturamentoMensal = finance?.revenue.map((item) => ({ mes: item.month, receita: Number(item.revenue), despesas: 0 })) ?? [];
+  const mapEntry = (item: AdminFinance["entries"][number]) => ({ ...item, descricao: item.description, categoria: item.category, valor: Number(item.amount), vencimento: new Date(item.due_date).toLocaleDateString("pt-BR"), forma: item.payment_method ?? "—" });
+  const contasReceber = finance?.entries.filter((item) => item.type === "RECEBER").map(mapEntry) ?? [];
+  const contasPagar = finance?.entries.filter((item) => item.type === "PAGAR").map(mapEntry) ?? [];
 
-  const receita = faturamentoMensal.at(-1)!.receita;
-  const despesas = faturamentoMensal.at(-1)!.despesas;
-  const lucro = receita - despesas;
-  const aReceber = contasReceber.filter(c => c.status === "Pendente").reduce((a, c) => a + c.valor, 0);
-  const aPagar = contasPagar.filter(c => c.status === "Pendente").reduce((a, c) => a + c.valor, 0);
+  const receita = finance?.summary.revenue ?? 0;
+  const despesas = finance?.summary.expenses ?? 0;
+  const lucro = finance?.summary.profit ?? 0;
+  const aReceber = finance?.summary.receivable ?? 0;
+  const aPagar = finance?.summary.payable ?? 0;
 
   return (
     <div className="p-4 md:p-6 space-y-6">
