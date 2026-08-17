@@ -1,26 +1,20 @@
-import { useEffect, useState } from "react";
-import { ShoppingCart, Search, Plus, Minus, Trash2, X, Check, ChevronRight, Package, Droplets, HeartPulse, CircleDot, ShoppingBag } from "lucide-react";
-import { createOrder, getAddresses, getStoreProducts, type Address, type StoreProduct } from "../../services/api";
+import { useState } from "react";
+import { ShoppingCart, Search, Plus, Minus, Trash2, X, Check, ChevronRight } from "lucide-react";
+import { produtos } from "../../data/mockData";
 
-type CartItem = { id: number; nome: string; preco: number; qty: number; icon?: string };
+type CartItem = { id: number; nome: string; preco: number; qty: number };
+
+const cats = ["Todos", ...Array.from(new Set(produtos.map(p => p.categoria)))];
 
 const PAYMENT = ["PIX", "Cartão de crédito", "Cartão de débito", "Boleto"];
 
 export default function Loja() {
-  const [produtos, setProdutos] = useState<StoreProduct[]>([]);
-  useEffect(() => { getStoreProducts().then((result) => setProdutos(result.data)).catch(() => setProdutos([])); }, []);
-  const cats = ["Todos", ...Array.from(new Set(produtos.map((p) => p.categoria)))];
   const [search, setSearch] = useState("");
   const [cat, setCat] = useState("Todos");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [step, setStep] = useState<"cart" | "endereco" | "pagamento" | "confirmado">("cart");
   const [pagamento, setPagamento] = useState("PIX");
-  const [enderecos, setEnderecos] = useState<Address[]>([]);
-  const [enderecoId, setEnderecoId] = useState<number | null>(null);
-  const [confirmando, setConfirmando] = useState(false);
-  const [erroCheckout, setErroCheckout] = useState("");
-  useEffect(() => { getAddresses().then((result) => { setEnderecos(result.data); setEnderecoId(result.data.find((item) => item.is_primary)?.id ?? result.data[0]?.id ?? null); }).catch(() => setEnderecos([])); }, []);
 
   const available = produtos.filter(p =>
     p.estoque > 0 &&
@@ -32,7 +26,7 @@ export default function Loja() {
     setCart(prev => {
       const ex = prev.find(i => i.id === p.id);
       if (ex) return prev.map(i => i.id === p.id ? { ...i, qty: i.qty + 1 } : i);
-      return [...prev, { id: p.id, nome: p.nome, preco: p.venda, qty: 1, icon: p.icon }];
+      return [...prev, { id: p.id, nome: p.nome, preco: p.venda, qty: 1 }];
     });
   };
 
@@ -51,12 +45,8 @@ export default function Loja() {
 
   const openCart = () => { setStep("cart"); setCartOpen(true); };
 
-  const confirmar = async () => {
-    if (!enderecoId) { setErroCheckout("Cadastre ou selecione um endereço de entrega."); return; }
-    setConfirmando(true); setErroCheckout("");
-    try { await createOrder({ itens: cart.map((item) => ({ produtoId: item.id, quantidade: item.qty })), enderecoId, formaPagamento: pagamento }); setStep("confirmado"); }
-    catch (error) { setErroCheckout(error instanceof Error ? error.message : "Não foi possível finalizar o pedido."); }
-    finally { setConfirmando(false); }
+  const confirmar = () => {
+    setStep("confirmado");
     setTimeout(() => {
       setCart([]);
       setCartOpen(false);
@@ -129,10 +119,10 @@ export default function Loja() {
               <div key={p.id} className="bg-white rounded-2xl border border-[#e5e7eb] shadow-sm overflow-hidden hover:shadow-md hover:border-[#86efac] transition-all group">
                 {/* Image area */}
                 <div className="h-32 bg-[#f0fdf4] flex items-center justify-center text-5xl relative">
-                  {p.icon === "food" ? "\u{1F969}" :
-                   p.icon === "hygiene" ? "\u{1F9F4}" :
-                   p.icon === "health" ? "\u{1F48A}" :
-                   p.icon === "toy" ? "\u{1F3BE}" : "\u{1F6CD}\u{FE0F}"}
+                  {p.categoria === "Alimentação" ? "🥩" :
+                   p.categoria === "Higiene" ? "🧴" :
+                   p.categoria === "Saúde" ? "💊" :
+                   p.categoria === "Brinquedos" ? "🎾" : "🛍️"}
                   <span className="absolute top-2 right-2 text-[10px] bg-white/90 text-[#6b7280] px-2 py-0.5 rounded-full font-medium border border-[#e5e7eb]">
                     {p.categoria}
                   </span>
@@ -245,15 +235,13 @@ export default function Loja() {
                     </div>
                   ) : cart.map(item => (
                     <div key={item.id} className="flex items-center gap-3 p-3 bg-[#fafafa] rounded-xl">
-                      <div className="w-10 h-10 bg-[#f0fdf4] rounded-xl flex items-center justify-center text-[0px] flex-shrink-0">
-                        <span className="text-2xl leading-none">{(item.icon === "food" || item.nome.toLowerCase().includes("ração")) ? "\u{1F969}" : (item.icon === "hygiene" || item.nome.toLowerCase().includes("shampoo")) ? "\u{1F9F4}" : (item.icon === "health" || item.nome.toLowerCase().includes("coleira")) ? "\u{1F48A}" : (item.icon === "toy" || item.nome.toLowerCase().includes("brinquedo")) ? "\u{1F3BE}" : "\u{1F6CD}\u{FE0F}"}</span>
-                        ðŸ›ï¸
+                      <div className="w-10 h-10 bg-[#f0fdf4] rounded-xl flex items-center justify-center text-xl flex-shrink-0">
+                        🛍️
                       </div>
-                      <div className="flex-1 min-w-0 text-transparent [&>p:nth-child(2)]:text-[0px]">
+                      <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-[#374151] leading-tight truncate">{item.nome}</p>
-                        <p className="text-xs text-[#9ca3af]">R$ {item.preco.toFixed(2)} Ã— {item.qty}</p>
+                        <p className="text-xs text-[#9ca3af]">R$ {item.preco.toFixed(2)} × {item.qty}</p>
                       </div>
-                        <p className="text-xs text-[#9ca3af]">R$ {item.preco.toFixed(2)} x {item.qty}</p>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <button onClick={() => updateQty(item.id, -1)} className="w-6 h-6 flex items-center justify-center hover:bg-[#e5e7eb] rounded-md text-[#6b7280] transition-colors">
                           <Minus size={11} />
@@ -274,13 +262,12 @@ export default function Loja() {
               {step === "endereco" && (
                 <div className="p-5 space-y-4">
                   <div className="p-4 border-2 border-[#16a34a] bg-[#f0fdf4] rounded-xl">
-                    {enderecos.length > 0 && <div className="mb-3 space-y-2">{enderecos.map((address) => <button key={address.id} onClick={() => setEnderecoId(address.id)} className={`w-full text-left p-3 rounded-lg border ${enderecoId === address.id ? "border-[#16a34a]" : "border-[#e5e7eb]"}`}><span className="text-xs font-semibold">{address.label || "Endereço"}</span><br /><span className="text-xs">{address.street}, {address.number} — {address.city}/{address.state}</span></button>)}</div>}
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-semibold text-[#374151]">Endereço cadastrado</span>
                       <Check size={14} className="text-[#16a34a]" />
                     </div>
                     <p className="text-sm text-[#374151] font-medium">Rua das Flores, 123 — Apto 42</p>
-                    <p className="text-xs text-[#9ca3af]">Jardim Paulistano, São Paulo — SP · CEP 01452-000</p>
+                    <p className="text-xs text-[#9ca3af]">Jardim Paulistano, São Paulo – SP · CEP 01452-000</p>
                   </div>
 
                   <div>
@@ -326,7 +313,7 @@ export default function Loja() {
                     <p className="text-xs font-semibold text-[#374151] mb-2">Resumo do pedido</p>
                     {cart.map(i => (
                       <div key={i.id} className="flex justify-between text-xs text-[#6b7280]">
-                        <span className="truncate mr-2">{i.nome} x {i.qty}</span>
+                        <span className="truncate mr-2">{i.nome} × {i.qty}</span>
                         <span className="flex-shrink-0">R$ {(i.preco * i.qty).toFixed(2)}</span>
                       </div>
                     ))}
@@ -337,7 +324,7 @@ export default function Loja() {
                       </span>
                     </div>
                     {pagamento === "PIX" && (
-                      <p className="text-[11px] text-[#16a34a] font-medium">Desconto de 5% aplicado no PIX</p>
+                      <p className="text-[11px] text-[#16a34a] font-medium">Desconto de 5% aplicado no PIX 🎉</p>
                     )}
                   </div>
                 </div>
@@ -392,17 +379,13 @@ export default function Loja() {
                   </button>
                 )}
                 {step === "pagamento" && (
-                  <>
                   <button
                     onClick={confirmar}
-                    disabled={confirmando}
                     className="w-full py-3 bg-[#16a34a] hover:bg-[#15803d] text-white font-semibold rounded-xl transition-colors"
                     style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                   >
-                    {confirmando ? "Processando..." : "Confirmar pedido"}
+                    Confirmar pedido
                   </button>
-                  {erroCheckout && <p className="text-xs text-red-600 mt-2">{erroCheckout}</p>}
-                  </>
                 )}
               </div>
             )}
