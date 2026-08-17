@@ -1,235 +1,39 @@
-import { useState } from "react";
-import { Check, ChevronRight, Dog, Scissors, Calendar, Clock } from "lucide-react";
-import { pets, servicos } from "../../data/mockData";
+import { useEffect, useState } from "react";
+import { Calendar, Check, ChevronRight, Clock, Dog, Scissors } from "lucide-react";
+import { createAppointment, getAvailableTimes, getPets, getServices, type Pet, type Service } from "../../services/api";
 
-const myPets = pets.filter(p => p.tutorId === 1);
-const STEPS = ["Escolher pet", "Escolher serviço", "Escolher data", "Confirmar"];
-const TIMES = ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"];
-const availableServicos = servicos.filter(s => !s.nome.includes("Consulta") && !s.nome.includes("Vacin"));
+const steps = ["Escolher pet", "Escolher servico", "Escolher data", "Confirmar"];
+function formatDuration(minutes: number) { return minutes >= 60 ? `${minutes / 60}h` : `${minutes}min`; }
 
 export default function Agendamento() {
   const [step, setStep] = useState(0);
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [times, setTimes] = useState<string[]>([]);
   const [selectedPet, setSelectedPet] = useState<number | null>(null);
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
-  const [selectedDate, setSelectedDate] = useState("2026-08-15");
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const pet = myPets.find(p => p.id === selectedPet);
-  const chosenServices = availableServicos.filter(s => selectedServices.includes(s.id));
-  const total = chosenServices.reduce((acc, s) => acc + s.preco, 0);
+  useEffect(() => { getPets().then((result) => setPets(result.data)); getServices().then((result) => setServices(result.data)); }, []);
+  useEffect(() => { if (step === 2) getAvailableTimes(selectedDate).then((result) => setTimes(result.data)).catch(() => setTimes([])); }, [selectedDate, step]);
 
-  function toggleService(id: number) {
-    setSelectedServices(prev =>
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-    );
-  }
+  const pet = pets.find((item) => item.id === selectedPet);
+  const chosenServices = services.filter((item) => selectedServices.includes(item.id));
+  const total = chosenServices.reduce((sum, item) => sum + Number(item.price), 0);
+  function toggleService(id: number) { setSelectedServices((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]); }
+  async function confirm() { if (!selectedPet || !selectedTime) return; setSaving(true); setError(""); try { await Promise.all(selectedServices.map((serviceId) => createAppointment({ petId: selectedPet, servicoId: serviceId, dataHora: `${selectedDate}T${selectedTime}:00` }))); setDone(true); } catch (requestError) { setError(requestError instanceof Error ? requestError.message : "Nao foi possivel concluir o agendamento."); } finally { setSaving(false); } }
+  function reset() { setDone(false); setStep(0); setSelectedPet(null); setSelectedServices([]); setSelectedTime(null); }
 
-  if (done) {
-    return (
-      <div className="max-w-md mx-auto text-center py-20">
-        <div className="w-20 h-20 rounded-full bg-[#dcfce7] flex items-center justify-center mx-auto mb-5">
-          <Check size={36} className="text-[#16a34a]" />
-        </div>
-        <h2 className="text-2xl font-bold text-[#111827] mb-2" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Agendamento confirmado!</h2>
-        <p className="text-[#6b7280] mb-6">Seu agendamento foi registrado com sucesso. Até lá!</p>
-        <div className="bg-[#f0fdf4] rounded-2xl p-5 border border-[#86efac] text-left space-y-2 mb-6">
-          <div className="flex justify-between text-sm"><span className="text-[#9ca3af]">Pet</span><span className="font-semibold text-[#374151]">{pet?.nome}</span></div>
-          <div className="flex justify-between text-sm">
-            <span className="text-[#9ca3af]">Serviços</span>
-            <span className="font-semibold text-[#374151] text-right max-w-[60%]">{chosenServices.map(s => s.nome).join(", ")}</span>
-          </div>
-          <div className="flex justify-between text-sm"><span className="text-[#9ca3af]">Data</span><span className="font-semibold text-[#374151]">{selectedDate.split("-").reverse().join("/")}</span></div>
-          <div className="flex justify-between text-sm"><span className="text-[#9ca3af]">Horário</span><span className="font-semibold text-[#374151]">{selectedTime}</span></div>
-          <div className="flex justify-between text-sm pt-1 border-t border-[#86efac]"><span className="text-[#9ca3af]">Total</span><span className="font-bold text-[#16a34a]">R$ {total.toFixed(2)}</span></div>
-        </div>
-        <button
-          onClick={() => { setDone(false); setStep(0); setSelectedPet(null); setSelectedServices([]); setSelectedTime(null); }}
-          className="px-6 py-3 bg-[#16a34a] text-white font-semibold rounded-xl hover:bg-[#15803d] transition-colors"
-          style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-        >
-          Novo agendamento
-        </button>
-      </div>
-    );
-  }
+  if (done) return <div className="max-w-md mx-auto text-center py-20"><div className="w-20 h-20 rounded-full bg-[#dcfce7] flex items-center justify-center mx-auto mb-5"><Check size={36} className="text-[#16a34a]" /></div><h2 className="text-2xl font-bold text-[#111827] mb-2">Agendamento confirmado!</h2><p className="text-[#6b7280] mb-6">Seu agendamento foi registrado com sucesso.</p><div className="bg-[#f0fdf4] rounded-2xl p-5 border border-[#86efac] text-left space-y-2 mb-6"><div className="flex justify-between text-sm"><span className="text-[#9ca3af]">Pet</span><span className="font-semibold">{pet?.name}</span></div><div className="flex justify-between text-sm"><span className="text-[#9ca3af]">Data</span><span className="font-semibold">{selectedDate.split("-").reverse().join("/")}</span></div><div className="flex justify-between text-sm"><span className="text-[#9ca3af]">Horario</span><span className="font-semibold">{selectedTime}</span></div><div className="flex justify-between text-sm pt-1 border-t border-[#86efac]"><span className="text-[#9ca3af]">Total</span><span className="font-bold text-[#16a34a]">R$ {total.toFixed(2)}</span></div></div><button onClick={reset} className="px-6 py-3 bg-[#16a34a] text-white font-semibold rounded-xl">Novo agendamento</button></div>;
 
-  return (
-    <div className="max-w-xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Agendar serviço</h1>
-        <p className="text-sm text-[#6b7280]">Siga os passos abaixo para agendar</p>
-      </div>
-
-      {/* Stepper */}
-      <div className="flex items-center gap-1">
-        {STEPS.map((s, i) => (
-          <div key={s} className="flex items-center flex-1 last:flex-none">
-            <div className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold flex-shrink-0 transition-all ${i < step ? "bg-[#16a34a] text-white" : i === step ? "bg-[#16a34a] text-white ring-4 ring-[#dcfce7]" : "bg-[#f3f4f6] text-[#9ca3af]"}`}>
-              {i < step ? <Check size={14} /> : i + 1}
-            </div>
-            <span className={`text-xs ml-1.5 hidden sm:block ${i === step ? "font-semibold text-[#111827]" : "text-[#9ca3af]"}`}>{s}</span>
-            {i < STEPS.length - 1 && <div className="flex-1 h-px bg-[#e5e7eb] mx-2" />}
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-4 md:p-6">
-        {/* Step 0 — choose pet */}
-        {step === 0 && (
-          <div className="space-y-3">
-            <h2 className="text-base font-semibold text-[#111827] mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Escolha o pet</h2>
-            {myPets.map(p => (
-              <button
-                key={p.id}
-                onClick={() => setSelectedPet(p.id)}
-                className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${selectedPet === p.id ? "border-[#16a34a] bg-[#f0fdf4]" : "border-[#e5e7eb] hover:border-[#d1d5db]"}`}
-              >
-                <span className="text-2xl">{p.foto}</span>
-                <div className="text-left">
-                  <p className="font-semibold text-[#111827]">{p.nome}</p>
-                  <p className="text-xs text-[#6b7280]">{p.raca} · {p.idade}</p>
-                </div>
-                {selectedPet === p.id && <Check size={18} className="ml-auto text-[#16a34a]" />}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Step 1 — choose services (multi-select) */}
-        {step === 1 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Escolha os serviços</h2>
-              <span className="text-xs text-[#6b7280]">Pode selecionar mais de um</span>
-            </div>
-            {availableServicos.map(s => {
-              const selected = selectedServices.includes(s.id);
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => toggleService(s.id)}
-                  className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${selected ? "border-[#16a34a] bg-[#f0fdf4]" : "border-[#e5e7eb] hover:border-[#d1d5db]"}`}
-                >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${selected ? "bg-[#16a34a]" : "bg-[#f0fdf4]"}`}>
-                    <Scissors size={16} className={selected ? "text-white" : "text-[#16a34a]"} />
-                  </div>
-                  <div className="text-left flex-1">
-                    <p className="font-semibold text-[#111827]">{s.nome}</p>
-                    <p className="text-xs text-[#6b7280]">{s.duracao}</p>
-                  </div>
-                  <span className="font-bold text-[#16a34a]">R$ {s.preco.toFixed(2)}</span>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${selected ? "border-[#16a34a] bg-[#16a34a]" : "border-[#d1d5db]"}`}>
-                    {selected && <Check size={12} className="text-white" />}
-                  </div>
-                </button>
-              );
-            })}
-            {selectedServices.length > 0 && (
-              <div className="flex items-center justify-between px-1 pt-1">
-                <span className="text-sm text-[#6b7280]">{selectedServices.length} serviço{selectedServices.length > 1 ? "s" : ""} selecionado{selectedServices.length > 1 ? "s" : ""}</span>
-                <span className="font-bold text-[#16a34a]">Total: R$ {total.toFixed(2)}</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Step 2 — date and time */}
-        {step === 2 && (
-          <div className="space-y-5">
-            <h2 className="text-base font-semibold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Escolha data e horário</h2>
-            <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-2">Data</label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={e => setSelectedDate(e.target.value)}
-                min="2026-08-14"
-                className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-2">Horário disponível</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {TIMES.map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setSelectedTime(t)}
-                    className={`py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${selectedTime === t ? "border-[#16a34a] bg-[#f0fdf4] text-[#16a34a]" : "border-[#e5e7eb] text-[#374151] hover:border-[#d1d5db]"}`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3 — confirm */}
-        {step === 3 && (
-          <div className="space-y-4">
-            <h2 className="text-base font-semibold text-[#111827] mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Confirmar agendamento</h2>
-            <div className="bg-[#f9fafb] rounded-xl p-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <Dog size={14} className="text-[#9ca3af]" />
-                <span className="text-sm text-[#6b7280]">Pet</span>
-                <span className="ml-auto text-sm font-semibold text-[#374151]">{pet?.nome}</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <Scissors size={14} className="text-[#9ca3af] mt-0.5" />
-                <span className="text-sm text-[#6b7280]">Serviços</span>
-                <div className="ml-auto text-right">
-                  {chosenServices.map(s => (
-                    <p key={s.id} className="text-sm font-semibold text-[#374151]">{s.nome}</p>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Calendar size={14} className="text-[#9ca3af]" />
-                <span className="text-sm text-[#6b7280]">Data</span>
-                <span className="ml-auto text-sm font-semibold text-[#374151]">{selectedDate.split("-").reverse().join("/")}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Clock size={14} className="text-[#9ca3af]" />
-                <span className="text-sm text-[#6b7280]">Horário</span>
-                <span className="ml-auto text-sm font-semibold text-[#374151]">{selectedTime}</span>
-              </div>
-              <div className="pt-2 border-t border-[#e5e7eb] flex items-center justify-between">
-                <span className="font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Total</span>
-                <span className="text-xl font-bold text-[#16a34a]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>R$ {total.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Navigation */}
-      <div className="flex gap-3">
-        {step > 0 && (
-          <button onClick={() => setStep(s => s - 1)} className="px-5 py-3 border border-[#e5e7eb] rounded-xl text-sm font-medium text-[#374151] hover:bg-[#f3f4f6] transition-colors">
-            Voltar
-          </button>
-        )}
-        {step < STEPS.length - 1 ? (
-          <button
-            onClick={() => setStep(s => s + 1)}
-            disabled={(step === 0 && !selectedPet) || (step === 1 && selectedServices.length === 0) || (step === 2 && !selectedTime)}
-            className="flex-1 py-3 bg-[#16a34a] hover:bg-[#15803d] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-          >
-            Continuar
-            <ChevronRight size={16} />
-          </button>
-        ) : (
-          <button
-            onClick={() => setDone(true)}
-            className="flex-1 py-3 bg-[#16a34a] hover:bg-[#15803d] text-white font-semibold rounded-xl transition-colors"
-            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-          >
-            Confirmar agendamento
-          </button>
-        )}
-      </div>
-    </div>
-  );
+  return <div className="max-w-xl mx-auto space-y-6"><div><h1 className="text-2xl font-bold text-[#111827]">Agendar servico</h1><p className="text-sm text-[#6b7280]">Siga os passos abaixo para agendar</p></div><div className="flex items-center gap-1">{steps.map((label, index) => <div key={label} className="flex items-center flex-1 last:flex-none"><div className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${index <= step ? "bg-[#16a34a] text-white" : "bg-[#f3f4f6] text-[#9ca3af]"}`}>{index < step ? <Check size={14} /> : index + 1}</div><span className={`text-xs ml-1.5 hidden sm:block ${index === step ? "font-semibold" : "text-[#9ca3af]"}`}>{label}</span>{index < steps.length - 1 && <div className="flex-1 h-px bg-[#e5e7eb] mx-2" />}</div>)}</div><div className="bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-4 md:p-6">
+    {step === 0 && <div className="space-y-3"><h2 className="text-base font-semibold mb-4">Escolha o pet</h2>{pets.map((item) => <button key={item.id} onClick={() => setSelectedPet(item.id)} className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 ${selectedPet === item.id ? "border-[#16a34a] bg-[#f0fdf4]" : "border-[#e5e7eb]"}`}><Dog size={22} className="text-[#16a34a]" /><div className="text-left"><p className="font-semibold">{item.name}</p><p className="text-xs text-[#6b7280]">{item.breed || item.species}</p></div>{selectedPet === item.id && <Check size={18} className="ml-auto text-[#16a34a]" />}</button>)}</div>}
+    {step === 1 && <div className="space-y-3"><div className="flex items-center justify-between mb-4"><h2 className="text-base font-semibold">Escolha os servicos</h2><span className="text-xs text-[#6b7280]">Pode selecionar mais de um</span></div>{services.map((item) => { const selected = selectedServices.includes(item.id); return <button key={item.id} onClick={() => toggleService(item.id)} className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 ${selected ? "border-[#16a34a] bg-[#f0fdf4]" : "border-[#e5e7eb]"}`}><div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selected ? "bg-[#16a34a]" : "bg-[#f0fdf4]"}`}><Scissors size={16} className={selected ? "text-white" : "text-[#16a34a]"} /></div><div className="text-left flex-1"><p className="font-semibold">{item.name}</p><p className="text-xs text-[#6b7280]">{formatDuration(item.duration_minutes)}</p></div><span className="font-bold text-[#16a34a]">R$ {Number(item.price).toFixed(2)}</span><div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected ? "border-[#16a34a] bg-[#16a34a]" : "border-[#d1d5db]"}`}>{selected && <Check size={12} className="text-white" />}</div></button>; })}</div>}
+    {step === 2 && <div className="space-y-5"><h2 className="text-base font-semibold">Escolha data e horario</h2><label className="block text-xs font-semibold">Data<input type="date" value={selectedDate} min={new Date().toISOString().slice(0, 10)} onChange={(event) => { setSelectedDate(event.target.value); setSelectedTime(null); }} className="mt-2 w-full px-3 py-2.5 border rounded-xl text-sm" /></label><div><p className="text-xs font-semibold mb-2">Horario disponivel</p><div className="grid grid-cols-2 sm:grid-cols-4 gap-2">{times.map((time) => <button key={time} onClick={() => setSelectedTime(time)} className={`py-2.5 rounded-xl text-sm border-2 ${selectedTime === time ? "border-[#16a34a] bg-[#f0fdf4] text-[#16a34a]" : "border-[#e5e7eb]"}`}><Clock size={14} className="inline mr-1" />{time}</button>)}</div></div></div>}
+    {step === 3 && <div className="space-y-4"><h2 className="text-base font-semibold">Confirmar agendamento</h2><div className="bg-[#f9fafb] rounded-xl p-4 space-y-3"><div className="flex justify-between text-sm"><span>Pet</span><b>{pet?.name}</b></div><div className="flex justify-between text-sm"><span>Servicos</span><b>{chosenServices.map((item) => item.name).join(", ")}</b></div><div className="flex justify-between text-sm"><span>Data e horario</span><b>{selectedDate.split("-").reverse().join("/")} - {selectedTime}</b></div><div className="pt-2 border-t flex justify-between"><b>Total</b><b className="text-[#16a34a]">R$ {total.toFixed(2)}</b></div></div></div>}
+  </div>{error && <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{error}</p>}<div className="flex gap-3">{step > 0 && <button onClick={() => setStep((current) => current - 1)} className="px-5 py-3 border rounded-xl text-sm">Voltar</button>}{step < 3 ? <button disabled={(step === 0 && !selectedPet) || (step === 1 && !selectedServices.length) || (step === 2 && !selectedTime)} onClick={() => setStep((current) => current + 1)} className="flex-1 py-3 bg-[#16a34a] disabled:opacity-40 text-white font-semibold rounded-xl flex items-center justify-center gap-2">Continuar<ChevronRight size={16} /></button> : <button disabled={saving} onClick={confirm} className="flex-1 py-3 bg-[#16a34a] disabled:opacity-50 text-white font-semibold rounded-xl">{saving ? "Confirmando..." : "Confirmar agendamento"}</button>}</div></div>;
 }

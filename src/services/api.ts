@@ -39,7 +39,7 @@ export async function login(email: string, senha: string) {
 export function getMe() {
   return request<AuthUser>("/auth/me");
 }
-export type Profile = AuthUser & { cpf?: string; phone?: string; birth_date?: string; avatar_url?: string };
+export type Profile = AuthUser & { name?: string; cpf?: string; phone?: string; birth_date?: string; avatar_url?: string };
 export function getProfile() { return request<Profile>("/portal/perfil"); }
 export function updateProfile(data: { nome?: string; cpf?: string; telefone?: string; nascimento?: string }) { return request<Profile>("/portal/perfil", { method: "PATCH", body: JSON.stringify(data) }); }
 
@@ -54,4 +54,24 @@ export function deleteAddress(id: number) { return request<void>(`/portal/perfil
 export type Pet = { id: number; name: string; species: string; breed?: string; sex?: string; birth_date?: string; weight?: number; notes?: string };
 export function getPets() { return request<{ data: Pet[] }>("/portal/pets"); }
 export function createPet(data: Record<string, string>) { return request<Pet>("/portal/pets", { method: "POST", body: JSON.stringify(data) }); }
+export type PetHistoryItem = { id: number; type: string; description: string; occurred_at: string };
+export function getPetHistory(id: number) { return request<{ data: PetHistoryItem[] }>(`/portal/pets/${id}/historico`); }
+export type Service = { id: number; name: string; description?: string; duration_minutes: number; price: number };
+export type Appointment = { id: number; starts_at: string; status: string; pet_name: string; service_name: string; price: number };
+export function getServices() { return request<{ data: Service[] }>("/portal/servicos"); }
+export function getAvailableTimes(data: string) { return request<{ data: string[] }>(`/portal/agendamentos/horarios-disponiveis?data=${data}`); }
+export function createAppointment(data: { petId: number; servicoId: number; dataHora: string; observacoes?: string }) { return request<Appointment>("/portal/agendamentos", { method: "POST", body: JSON.stringify(data) }); }
+export function getAppointments() { return request<{ data: Appointment[] }>("/portal/agendamentos"); }
+export function cancelAppointment(id: number) { return request<void>(`/portal/agendamentos/${id}/cancelar`, { method: "POST" }); }
+export type Order = { id: number; status: string; total: number | string; created_at: string; products: string };
+export function getOrders() { return request<{ data: Order[] }>("/portal/pedidos"); }
+export function getOrder(id: number) { return request<Order & { items: unknown[] }>(`/portal/pedidos/${id}`); }
+export function cancelOrder(id: number) { return request<void>(`/portal/pedidos/${id}/cancelar`, { method: "POST" }); }
+export type Notification = { id: number; type: string; title: string; description: string; read_at?: string | null; created_at: string };
+export function getNotifications() { return request<{ data: Notification[]; unreadCount: number }>("/portal/notificacoes"); }
+export function markNotificationRead(id: number) { return request<void>(`/portal/notificacoes/${id}/lida`, { method: "PATCH" }); }
+export function markAllNotificationsRead() { return request<void>("/portal/notificacoes/ler-todas", { method: "PATCH" }); }
+export function createOrder(data: { itens: Array<{ produtoId: number; quantidade: number }>; enderecoId: number; formaPagamento: string; observacoes?: string }) { return request<Order & { items: unknown[] }>("/portal/pedidos", { method: "POST", body: JSON.stringify(data) }); }
+export type StoreProduct = { id: number; nome: string; sku: string; categoria: string; estoque: number; venda: number; icon?: string; imageUrl?: string };
+export async function getStoreProducts(query = "") { const result = await request<{ data: Array<{ id: number; name: string; sku: string; category: string; stock: number; sale_price: string | number; icon?: string; image_url?: string }> }>(`/portal/loja/produtos${query ? `?q=${encodeURIComponent(query)}` : ""}`); return { data: result.data.map((item) => ({ id: item.id, nome: item.name, sku: item.sku, categoria: item.category, estoque: item.stock, venda: Number(item.sale_price), icon: item.icon, imageUrl: item.image_url })) as StoreProduct[] }; }
 export function changePassword(senhaAtual: string, novaSenha: string) { return request<void>("/portal/perfil/senha", { method: "PATCH", body: JSON.stringify({ senhaAtual, novaSenha }) }); }
