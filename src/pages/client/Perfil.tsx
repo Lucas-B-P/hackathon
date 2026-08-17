@@ -1,115 +1,60 @@
-import { useState } from "react";
-import { User, MapPin, Bell, Lock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Bell, Lock, MapPin, User } from "lucide-react";
+import { changePassword, createAddress, deleteAddress, getAddresses, getProfile, updateAddress, updateProfile, type Address, type Profile } from "../../services/api";
 
-const TABS = [
-  { id: "dados", label: "Dados pessoais", icon: User },
-  { id: "enderecos", label: "Endereços", icon: MapPin },
-  { id: "preferencias", label: "Preferências", icon: Bell },
-  { id: "seguranca", label: "Segurança", icon: Lock },
-];
+const tabs = [{ id: "dados", label: "Dados pessoais", icon: User }, { id: "enderecos", label: "Endereços", icon: MapPin }, { id: "preferencias", label: "Preferências", icon: Bell }, { id: "seguranca", label: "Segurança", icon: Lock }];
+const emptyAddress = { rotulo: "Casa", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", uf: "", cep: "", principal: false };
 
 export default function Perfil() {
   const [tab, setTab] = useState("dados");
+  const [user, setUser] = useState<Profile | null>(null);
+  const [personal, setPersonal] = useState({ nome: "", cpf: "", telefone: "", nascimento: "" });
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [form, setForm] = useState(false);
+  const [editing, setEditing] = useState<Address | null>(null);
+  const [address, setAddress] = useState(emptyAddress);
+  const [passwords, setPasswords] = useState({ atual: "", nova: "", confirmacao: "" });
+  const [passwordMessage, setPasswordMessage] = useState("");
 
-  return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Meu Perfil</h1>
-        <p className="text-sm text-[#6b7280]">Gerencie suas informações e preferências</p>
-      </div>
+  useEffect(() => { getProfile().then((profile) => { setUser(profile); setPersonal({ nome: profile.name ?? "", cpf: profile.cpf ?? "", telefone: profile.phone ?? "", nascimento: profile.birth_date ?? "" }); }).catch(() => undefined); }, []);
+  useEffect(() => { if (tab === "enderecos") getAddresses().then((result) => setAddresses(result.data)).catch(() => setAddresses([])); }, [tab]);
 
-      <div className="flex gap-1 bg-[#f3f4f6] rounded-xl p-1">
-        {TABS.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={`flex items-center gap-2 flex-1 py-2 px-3 text-xs font-medium rounded-lg transition-all ${tab === id ? "bg-white text-[#111827] shadow-sm" : "text-[#6b7280]"}`}
-          >
-            <Icon size={14} />
-            <span className="hidden sm:block">{label}</span>
-          </button>
-        ))}
-      </div>
+  function editAddress(item?: Address) {
+    setEditing(item ?? null);
+    setAddress(item ? { rotulo: item.label ?? "Casa", logradouro: item.street, numero: item.number, complemento: item.complement ?? "", bairro: item.neighborhood, cidade: item.city, uf: item.state, cep: item.zip_code, principal: item.is_primary } : { ...emptyAddress });
+    setForm(true);
+  }
 
-      <div className="bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-4 md:p-6">
-        {tab === "dados" && (
-          <div className="space-y-5">
-            <div className="flex items-center gap-4 pb-5 border-b border-[#f3f4f6]">
-              <div className="w-16 h-16 rounded-full bg-[#16a34a] flex items-center justify-center text-white text-xl font-bold">JC</div>
-              <div>
-                <p className="font-bold text-[#111827] text-lg" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>João Carlos Ferreira</p>
-                <p className="text-sm text-[#6b7280]">Tutor desde jan/2024</p>
-              </div>
-              <button className="ml-auto text-sm text-[#16a34a] hover:underline font-medium">Alterar foto</button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                ["Nome completo", "João Carlos Ferreira"],
-                ["CPF", "123.456.789-00"],
-                ["Telefone", "(11) 99234-5678"],
-                ["E-mail", "joao@email.com"],
-                ["Data de nascimento", "15/03/1990"],
-              ].map(([l, v]) => (
-                <div key={l} className={l === "E-mail" ? "col-span-2" : ""}>
-                  <label className="block text-xs font-semibold text-[#374151] mb-1.5">{l}</label>
-                  <input defaultValue={v} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a] transition-colors" />
-                </div>
-              ))}
-            </div>
-            <button className="px-5 py-2.5 bg-[#16a34a] hover:bg-[#15803d] text-white font-semibold text-sm rounded-xl transition-colors" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Salvar alterações</button>
-          </div>
-        )}
+  async function saveAddress(event: React.FormEvent) {
+    event.preventDefault();
+    const saved = editing ? await updateAddress(editing.id, address) : await createAddress(address);
+    setAddresses((current) => editing ? current.map((item) => item.id === saved.id ? saved : item) : [...current, saved]);
+    setForm(false);
+  }
 
-        {tab === "enderecos" && (
-          <div className="space-y-4">
-            <div className="p-4 border border-[#e5e7eb] rounded-xl">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[#374151]">Endereço principal</span>
-                <span className="text-[10px] bg-[#dcfce7] text-[#15803d] px-2 py-0.5 rounded-full font-medium">Principal</span>
-              </div>
-              <p className="text-sm text-[#374151]">Rua das Flores, 123 — Apto 42</p>
-              <p className="text-xs text-[#9ca3af]">Jardim Paulistano, São Paulo – SP · CEP 01452-000</p>
-            </div>
-            <button className="w-full py-3 border-2 border-dashed border-[#d1d5db] rounded-xl text-sm text-[#9ca3af] hover:border-[#16a34a] hover:text-[#16a34a] transition-colors">
-              + Adicionar endereço
-            </button>
-          </div>
-        )}
+  async function savePersonal(event: React.FormEvent) {
+    event.preventDefault();
+    const profile = await updateProfile(personal);
+    setUser(profile);
+  }
 
-        {tab === "preferencias" && (
-          <div className="space-y-4">
-            {[
-              ["Notificações por e-mail", "Agendamentos, promoções e novidades"],
-              ["Notificações por SMS", "Confirmações e lembretes"],
-              ["Lembretes de agendamento", "24h antes do horário marcado"],
-              ["Promoções e ofertas", "Receber ofertas exclusivas"],
-            ].map(([label, desc]) => (
-              <div key={label} className="flex items-center justify-between py-2 border-b border-[#f3f4f6] last:border-0">
-                <div>
-                  <p className="text-sm font-medium text-[#374151]">{label}</p>
-                  <p className="text-xs text-[#9ca3af]">{desc}</p>
-                </div>
-                <div className="w-10 h-6 bg-[#16a34a] rounded-full relative cursor-pointer flex-shrink-0">
-                  <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm" />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+  async function savePassword(event: React.FormEvent) {
+    event.preventDefault();
+    setPasswordMessage("");
+    if (passwords.nova.length < 6) return setPasswordMessage("A nova senha precisa ter pelo menos 6 caracteres.");
+    if (passwords.nova !== passwords.confirmacao) return setPasswordMessage("A confirmação não confere com a nova senha.");
+    try { await changePassword(passwords.atual, passwords.nova); setPasswords({ atual: "", nova: "", confirmacao: "" }); setPasswordMessage("Senha alterada com sucesso."); } catch (error) { setPasswordMessage(error instanceof Error ? error.message : "Não foi possível alterar a senha."); }
+  }
 
-        {tab === "seguranca" && (
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Alterar senha</h3>
-            {[["Senha atual", "password"], ["Nova senha", "password"], ["Confirmar nova senha", "password"]].map(([l, t]) => (
-              <div key={l}>
-                <label className="block text-xs font-semibold text-[#374151] mb-1.5">{l}</label>
-                <input type={t} placeholder="••••••••" className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
-              </div>
-            ))}
-            <button className="px-5 py-2.5 bg-[#16a34a] hover:bg-[#15803d] text-white font-semibold text-sm rounded-xl transition-colors" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Alterar senha</button>
-          </div>
-        )}
-      </div>
+  const initials = (user?.nome ?? "Seu nome").split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase();
+  return <div className="max-w-2xl space-y-6">
+    <div><h1 className="text-2xl font-bold text-[#111827]">Meu Perfil</h1><p className="text-sm text-[#6b7280]">Gerencie suas informações e preferências</p></div>
+    <div className="flex gap-1 bg-[#f3f4f6] rounded-xl p-1">{tabs.map(({ id, label, icon: Icon }) => <button key={id} onClick={() => setTab(id)} className={`flex items-center gap-2 flex-1 py-2 px-3 text-xs font-medium rounded-lg ${tab === id ? "bg-white text-[#111827] shadow-sm" : "text-[#6b7280]"}`}><Icon size={14} /><span className="hidden sm:block">{label}</span></button>)}</div>
+    <div className="bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-4 md:p-6">
+      {tab === "dados" && <form onSubmit={savePersonal} className="space-y-5"><div className="flex items-center gap-4 pb-5 border-b border-[#f3f4f6]"><div className="w-16 h-16 rounded-full bg-[#16a34a] flex items-center justify-center text-white text-xl font-bold">{initials}</div><div><p className="font-bold text-[#111827] text-lg">{user?.name ?? "Carregando..."}</p><p className="text-sm text-[#6b7280]">{user?.email ?? ""}</p></div></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><label className="block"><span className="block text-xs font-semibold mb-1.5">Nome completo</span><input value={personal.nome} onChange={(e) => setPersonal({ ...personal, nome: e.target.value })} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm" /></label><label className="block"><span className="block text-xs font-semibold mb-1.5">CPF</span><input value={personal.cpf} onChange={(e) => setPersonal({ ...personal, cpf: e.target.value })} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm" /></label><label className="block"><span className="block text-xs font-semibold mb-1.5">Telefone</span><input value={personal.telefone} onChange={(e) => setPersonal({ ...personal, telefone: e.target.value })} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm" /></label><label className="block"><span className="block text-xs font-semibold mb-1.5">E-mail</span><input value={user?.email ?? ""} readOnly className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm bg-[#f9fafb]" /></label><label className="block sm:col-span-2"><span className="block text-xs font-semibold mb-1.5">Data de nascimento</span><input type="date" value={personal.nascimento} onChange={(e) => setPersonal({ ...personal, nascimento: e.target.value })} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm" /></label></div><button className="px-5 py-2.5 bg-[#16a34a] text-white font-semibold text-sm rounded-xl">Salvar alterações</button></form>}
+      {tab === "enderecos" && <div className="space-y-4">{addresses.map((item) => <div key={item.id} className="p-4 border border-[#e5e7eb] rounded-xl"><div className="flex justify-between"><span className="text-xs font-semibold">{item.label || "Endereço"}</span>{item.is_primary && <span className="text-[10px] bg-[#dcfce7] text-[#15803d] px-2 py-0.5 rounded-full">Principal</span>}</div><p className="text-sm mt-2">{item.street}, {item.number}{item.complement ? ` — ${item.complement}` : ""}</p><p className="text-xs text-[#9ca3af]">{item.neighborhood}, {item.city} - {item.state} · CEP {item.zip_code}</p><div className="flex gap-4 mt-3"><button onClick={() => editAddress(item)} className="text-xs text-[#16a34a] font-semibold">Editar</button><button onClick={async () => { await deleteAddress(item.id); setAddresses((current) => current.filter((addressItem) => addressItem.id !== item.id)); }} className="text-xs text-red-500 font-semibold">Remover</button></div></div>)}{form ? <form onSubmit={saveAddress} className="grid grid-cols-2 gap-3 p-4 bg-[#f9fafb] rounded-xl"><input required placeholder="Rua" value={address.logradouro} onChange={(e) => setAddress({ ...address, logradouro: e.target.value })} className="col-span-2 px-3 py-2 border rounded-lg text-sm" /><input required placeholder="Número" value={address.numero} onChange={(e) => setAddress({ ...address, numero: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" /><input placeholder="Complemento" value={address.complemento} onChange={(e) => setAddress({ ...address, complemento: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" /><input required placeholder="Bairro" value={address.bairro} onChange={(e) => setAddress({ ...address, bairro: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" /><input required placeholder="Cidade" value={address.cidade} onChange={(e) => setAddress({ ...address, cidade: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" /><input required placeholder="UF" maxLength={2} value={address.uf} onChange={(e) => setAddress({ ...address, uf: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" /><input required placeholder="CEP" value={address.cep} onChange={(e) => setAddress({ ...address, cep: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" /><div className="col-span-2 flex justify-end gap-3"><button type="button" onClick={() => setForm(false)} className="text-sm">Cancelar</button><button className="px-4 py-2 bg-[#16a34a] text-white rounded-lg text-sm font-semibold">Salvar endereço</button></div></form> : <button onClick={() => editAddress()} className="w-full py-3 border-2 border-dashed rounded-xl text-sm text-[#6b7280] hover:border-[#16a34a]">+ Adicionar endereço</button>}</div>}
+      {tab === "preferencias" && <p className="text-sm text-[#6b7280]">Suas preferências de comunicação estarão disponíveis aqui.</p>}
+      {tab === "seguranca" && <form onSubmit={savePassword} className="space-y-4 max-w-md"><div><h3 className="text-base font-bold text-[#111827]">Alterar senha</h3><p className="text-sm text-[#6b7280] mt-1">Use uma senha forte para manter sua conta protegida.</p></div><label className="block"><span className="block text-xs font-semibold mb-1.5">Senha atual</span><input required type="password" value={passwords.atual} onChange={(e) => setPasswords({ ...passwords, atual: e.target.value })} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm" /></label><label className="block"><span className="block text-xs font-semibold mb-1.5">Nova senha</span><input required minLength={6} type="password" placeholder="Mínimo de 6 caracteres" value={passwords.nova} onChange={(e) => setPasswords({ ...passwords, nova: e.target.value })} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm" /></label><label className="block"><span className="block text-xs font-semibold mb-1.5">Confirmar nova senha</span><input required minLength={6} type="password" value={passwords.confirmacao} onChange={(e) => setPasswords({ ...passwords, confirmacao: e.target.value })} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm" /></label>{passwordMessage && <p className="text-sm text-[#15803d] bg-[#f0fdf4] rounded-lg px-3 py-2">{passwordMessage}</p>}<button className="px-5 py-2.5 bg-[#16a34a] text-white font-semibold text-sm rounded-xl">Alterar senha</button></form>}
     </div>
-  );
+  </div>;
 }

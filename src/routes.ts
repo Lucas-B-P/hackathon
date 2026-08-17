@@ -4,6 +4,9 @@ import AdminLayout from "./layouts/AdminLayout";
 import ClientLayout from "./layouts/ClientLayout";
 
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Contact from "./pages/Contact";
+import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/admin/Dashboard";
 import Agenda from "./pages/admin/Agenda";
 import Clientes from "./pages/admin/Clientes";
@@ -31,6 +34,18 @@ export const router = createBrowserRouter([
   {
     path: "/",
     Component: Login,
+  },
+  {
+    path: "/cadastro",
+    Component: Register,
+  },
+  {
+    path: "/contato",
+    Component: Contact,
+  },
+  {
+    path: "/esqueci-senha",
+    Component: ForgotPassword,
   },
   {
     path: "/admin",
