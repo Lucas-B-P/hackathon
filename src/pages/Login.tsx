@@ -1,93 +1,50 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { Eye, EyeOff, Lock, Mail, PawPrint } from "lucide-react";
-import { login } from "../services/api";
+import { useState } from "react"
+import { Link, useNavigate } from "react-router"
+import { Eye, EyeOff, Lock, Mail } from "lucide-react"
+import AuthSidebar from "../components/AuthSidebar"
+import AuthMobileLogo from "../components/AuthMobileLogo"
+import { login } from "../services/api"
 
 export default function Login() {
-  const navigate = useNavigate();
-  const [showPass, setShowPass] = useState(false);
-  const [email, setEmail] = useState("joao@email.com");
-  const [senha, setSenha] = useState("");
-  const [lembrar, setLembrar] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate()
+  const [showPass, setShowPass] = useState(false)
+  const [email, setEmail] = useState("joao@email.com")
+  const [senha, setSenha] = useState("")
+  const [lembrar, setLembrar] = useState(false)
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+    e.preventDefault()
+    setError("")
+    setLoading(true)
     try {
-      const result = await login(email, senha);
-      navigate(result.user.role === "cliente" ? "/portal" : "/admin");
+      const result = await login(email, senha)
+      navigate(result.user.role === "cliente" ? "/portal" : "/admin")
     } catch (loginError) {
-      setError(loginError instanceof Error ? loginError.message : "Falha ao entrar");
+      setError(loginError instanceof Error ? loginError.message : "Falha ao entrar")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="auth-page-enter min-h-screen flex">
-      {/* Left panel */}
-      <div className="hidden lg:flex flex-col justify-between w-[480px] bg-[#15803d] p-12 flex-shrink-0">
-        <div>
-          <div className="flex items-center gap-3 mb-16">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <PawPrint size={22} className="text-white" />
-            </div>
+    <div className="auth-page-enter min-h-screen flex flex-col lg:flex-row">
+      <AuthSidebar
+        title="Bem-vindo ao portal exclusivo para tutores"
+        description="Acompanhe seus pets, agende serviços, acompanhe pedidos e muito mais, tudo em um só lugar."
+        featuresLabel="O que você pode fazer aqui"
+        features={[
+          "Agendar banho, tosa e consultas",
+          "Acompanhar o histórico dos seus pets",
+          "Visualizar e rastrear seus pedidos",
+          "Gerenciar dados e preferências",
+        ]}
+      />
 
-            {error && (
-              <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
-                {error}
-              </p>
-            )}
-            <div>
-              <span className="text-white font-bold text-xl" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Patinhas</span>
-              <span className="text-green-300 font-medium ml-1.5">Pet Shop</span>
-            </div>
-          </div>
-
-          <h2 className="text-white text-3xl font-bold leading-tight mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Bem-vindo ao portal exclusivo para tutores
-          </h2>
-          <p className="text-green-200 text-base leading-relaxed">
-            Acompanhe seus pets, agende serviços, acompanhe pedidos e muito mais, tudo em um só lugar.
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          <p className="text-green-300 text-xs font-semibold uppercase tracking-wider">O que você pode fazer aqui</p>
-          <div className="space-y-2">
-            {[
-              "Agendar banho, tosa e consultas",
-              "Acompanhar o histórico dos seus pets",
-              "Visualizar e rastrear seus pedidos",
-              "Gerenciar dados e preferências",
-            ].map(item => (
-              <div key={item} className="flex items-center gap-2.5 text-green-100 text-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
-                {item}
-              </div>
-            ))}
-          </div>
-          <p className="text-green-400 text-xs mt-4 pt-4 border-t border-white/10">
-            Powered by <span className="font-semibold text-white">Petzio ERP</span>
-          </p>
-        </div>
-      </div>
-
-      {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-[#f9fafb]">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-[#f9fafb] min-h-screen lg:min-h-0">
         <div className="w-full max-w-[380px]">
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2 mb-10 lg:hidden">
-            <div className="w-9 h-9 rounded-xl bg-[#16a34a] flex items-center justify-center">
-              <PawPrint size={18} className="text-white" />
-            </div>
-            <div>
-              <span className="font-bold text-lg text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Patinhas Pet Shop</span>
-            </div>
-          </div>
+          <AuthMobileLogo />
 
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-[#111827] mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -98,6 +55,12 @@ export default function Login() {
             </p>
           </div>
 
+          {error && (
+            <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2 mb-4">
+              {error}
+            </p>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-[#374151] mb-1.5">E-mail</label>
@@ -106,7 +69,7 @@ export default function Login() {
                 <input
                   type="email"
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-9 pr-4 py-2.5 bg-white border border-[#e5e7eb] rounded-xl text-sm text-[#111827] outline-none focus:border-[#16a34a] focus:ring-2 focus:ring-[#dcfce7] transition-all"
                 />
               </div>
@@ -119,12 +82,12 @@ export default function Login() {
                 <input
                   type={showPass ? "text" : "password"}
                   value={senha}
-                  onChange={e => setSenha(e.target.value)}
+                  onChange={(e) => setSenha(e.target.value)}
                   className="w-full pl-9 pr-10 py-2.5 bg-white border border-[#e5e7eb] rounded-xl text-sm text-[#111827] outline-none focus:border-[#16a34a] focus:ring-2 focus:ring-[#dcfce7] transition-all"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPass(s => !s)}
+                  onClick={() => setShowPass((s) => !s)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9ca3af] hover:text-[#6b7280]"
                 >
                   {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -137,7 +100,7 @@ export default function Login() {
                 <input
                   type="checkbox"
                   checked={lembrar}
-                  onChange={e => setLembrar(e.target.checked)}
+                  onChange={(e) => setLembrar(e.target.checked)}
                   className="w-4 h-4 accent-[#16a34a]"
                 />
                 <span className="text-sm text-[#374151]">Lembrar de mim</span>
@@ -157,7 +120,10 @@ export default function Login() {
           </form>
 
           <p className="text-center text-sm text-[#6b7280] mt-5">
-            Ainda não possui uma conta? <Link to="/cadastro" className="text-[#16a34a] font-semibold hover:underline">Criar conta</Link>
+            Ainda não possui uma conta?{" "}
+            <Link to="/cadastro" className="text-[#16a34a] font-semibold hover:underline">
+              Criar conta
+            </Link>
           </p>
 
           <p className="text-center text-xs text-[#9ca3af] mt-6">
@@ -169,5 +135,5 @@ export default function Login() {
         </div>
       </div>
     </div>
-  );
+  )
 }

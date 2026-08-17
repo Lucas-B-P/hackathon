@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, ShoppingCart, Plus, Minus, Trash2, X, Check } from "lucide-react";
-import { produtos } from "../../data/mockData";
-import { createAdminSale } from "../../services/api";
+import { createAdminSale, getAdminProducts, type AdminProduct } from "../../services/api";
 
 type CartItem = { id: number; nome: string; preco: number; qty: number };
 type PayModal = { open: boolean; metodo: string };
@@ -12,19 +11,21 @@ export default function Vendas() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [payModal, setPayModal] = useState<PayModal>({ open: false, metodo: "PIX" });
   const [success, setSuccess] = useState(false);
+  const [produtos, setProdutos] = useState<AdminProduct[]>([]);
+  useEffect(() => { getAdminProducts().then((result) => setProdutos(result.data)).catch(() => setProdutos([])); }, []);
 
-  const cats = ["Todos", ...Array.from(new Set(produtos.map(p => p.categoria)))];
+  const cats = ["Todos", ...Array.from(new Set(produtos.map(p => p.category)))];
   const filtered = produtos.filter(p =>
-    p.nome.toLowerCase().includes(search.toLowerCase()) &&
-    (cat === "Todos" || p.categoria === cat) &&
-    p.estoque > 0
+    p.name.toLowerCase().includes(search.toLowerCase()) &&
+    (cat === "Todos" || p.category === cat) &&
+    p.stock > 0
   );
 
-  const addToCart = (p: typeof produtos[0]) => {
+  const addToCart = (p: AdminProduct) => {
     setCart(prev => {
       const ex = prev.find(i => i.id === p.id);
       if (ex) return prev.map(i => i.id === p.id ? { ...i, qty: i.qty + 1 } : i);
-      return [...prev, { id: p.id, nome: p.nome, preco: p.venda, qty: 1 }];
+      return [...prev, { id: p.id, nome: p.name, preco: Number(p.sale_price), qty: 1 }];
     });
   };
 
@@ -82,11 +83,11 @@ export default function Vendas() {
               onClick={() => addToCart(p)}
               className="bg-white rounded-xl border border-[#e5e7eb] p-4 text-left hover:border-[#86efac] hover:shadow-sm transition-all group"
             >
-              <p className="text-xs font-semibold text-[#111827] leading-tight group-hover:text-[#15803d] transition-colors">{p.nome}</p>
-              <p className="text-[11px] text-[#9ca3af] mt-1">{p.categoria}</p>
+              <p className="text-xs font-semibold text-[#111827] leading-tight group-hover:text-[#15803d] transition-colors">{p.name}</p>
+              <p className="text-[11px] text-[#9ca3af] mt-1">{p.category}</p>
               <div className="flex items-center justify-between mt-3">
-                <span className="text-sm font-bold text-[#111827]">R$ {p.venda.toFixed(2)}</span>
-                <span className="text-[10px] text-[#9ca3af]">Est: {p.estoque}</span>
+                <span className="text-sm font-bold text-[#111827]">R$ {Number(p.sale_price).toFixed(2)}</span>
+                <span className="text-[10px] text-[#9ca3af]">Est: {p.stock}</span>
               </div>
             </button>
           ))}

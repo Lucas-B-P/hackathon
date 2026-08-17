@@ -112,3 +112,16 @@ export function createOrder(data: { itens: Array<{ produtoId: number; quantidade
 export type StoreProduct = { id: number; nome: string; sku: string; categoria: string; estoque: number; venda: number; icon?: string; imageUrl?: string };
 export async function getStoreProducts(query = "") { const result = await request<{ data: Array<{ id: number; name: string; sku: string; category: string; stock: number; sale_price: string | number; icon?: string; image_url?: string }> }>(`/portal/loja/produtos${query ? `?q=${encodeURIComponent(query)}` : ""}`); return { data: result.data.map((item) => ({ id: item.id, nome: item.name, sku: item.sku, categoria: item.category, estoque: item.stock, venda: Number(item.sale_price), icon: item.icon, imageUrl: item.image_url })) as StoreProduct[] }; }
 export function changePassword(senhaAtual: string, novaSenha: string) { return request<void>("/portal/perfil/senha", { method: "PATCH", body: JSON.stringify({ senhaAtual, novaSenha }) }); }
+
+export function register(data: { nome: string; email: string; senha: string; cpf?: string; telefone?: string; nascimento?: string }) {
+  return request<LoginResponse>("/auth/register", { method: "POST", body: JSON.stringify(data) });
+}
+export function getInitials(name: string) { return name.split(" ").filter(Boolean).map((part) => part[0]).slice(0, 2).join("").toUpperCase(); }
+export function toNumber(value: number | string | null | undefined) { return Number(value ?? 0); }
+export function formatDatePt(value?: string | null) { return value ? new Date(value).toLocaleDateString("pt-BR") : "-"; }
+export function formatTimeFromIso(value?: string | null) { return value ? new Date(value).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "-"; }
+export function formatRelativeTime(value: string) { return formatDatePt(value); }
+export function displayOrderStatus(status: string) { return status; }
+export function displayCategory(category: string) { return category; }
+export function productEmoji(category: string) { return category === "Brinquedos" ? "🎾" : category === "Saúde" ? "💊" : category === "Higiene" ? "🧴" : "🛍️"; }
+export function getStoreCategories() { return request<{ data: string[] }>("/portal/loja/categorias"); }
