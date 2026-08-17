@@ -4,19 +4,26 @@ import { pets, servicos } from "../../data/mockData";
 
 const myPets = pets.filter(p => p.tutorId === 1);
 const STEPS = ["Escolher pet", "Escolher serviço", "Escolher data", "Confirmar"];
-
 const TIMES = ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"];
+const availableServicos = servicos.filter(s => !s.nome.includes("Consulta") && !s.nome.includes("Vacin"));
 
 export default function Agendamento() {
   const [step, setStep] = useState(0);
   const [selectedPet, setSelectedPet] = useState<number | null>(null);
-  const [selectedService, setSelectedService] = useState<number | null>(null);
+  const [selectedServices, setSelectedServices] = useState<number[]>([]);
   const [selectedDate, setSelectedDate] = useState("2026-08-15");
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
   const pet = myPets.find(p => p.id === selectedPet);
-  const service = servicos.find(s => s.id === selectedService);
+  const chosenServices = availableServicos.filter(s => selectedServices.includes(s.id));
+  const total = chosenServices.reduce((acc, s) => acc + s.preco, 0);
+
+  function toggleService(id: number) {
+    setSelectedServices(prev =>
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+    );
+  }
 
   if (done) {
     return (
@@ -28,12 +35,19 @@ export default function Agendamento() {
         <p className="text-[#6b7280] mb-6">Seu agendamento foi registrado com sucesso. Até lá!</p>
         <div className="bg-[#f0fdf4] rounded-2xl p-5 border border-[#86efac] text-left space-y-2 mb-6">
           <div className="flex justify-between text-sm"><span className="text-[#9ca3af]">Pet</span><span className="font-semibold text-[#374151]">{pet?.nome}</span></div>
-          <div className="flex justify-between text-sm"><span className="text-[#9ca3af]">Serviço</span><span className="font-semibold text-[#374151]">{service?.nome}</span></div>
-          <div className="flex justify-between text-sm"><span className="text-[#9ca3af]">Data</span><span className="font-semibold text-[#374151]">15/08/2026</span></div>
+          <div className="flex justify-between text-sm">
+            <span className="text-[#9ca3af]">Serviços</span>
+            <span className="font-semibold text-[#374151] text-right max-w-[60%]">{chosenServices.map(s => s.nome).join(", ")}</span>
+          </div>
+          <div className="flex justify-between text-sm"><span className="text-[#9ca3af]">Data</span><span className="font-semibold text-[#374151]">{selectedDate.split("-").reverse().join("/")}</span></div>
           <div className="flex justify-between text-sm"><span className="text-[#9ca3af]">Horário</span><span className="font-semibold text-[#374151]">{selectedTime}</span></div>
-          <div className="flex justify-between text-sm"><span className="text-[#9ca3af]">Valor</span><span className="font-semibold text-[#16a34a]">R$ {service?.preco.toFixed(2)}</span></div>
+          <div className="flex justify-between text-sm pt-1 border-t border-[#86efac]"><span className="text-[#9ca3af]">Total</span><span className="font-bold text-[#16a34a]">R$ {total.toFixed(2)}</span></div>
         </div>
-        <button onClick={() => { setDone(false); setStep(0); setSelectedPet(null); setSelectedService(null); setSelectedTime(null); }} className="px-6 py-3 bg-[#16a34a] text-white font-semibold rounded-xl hover:bg-[#15803d] transition-colors" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <button
+          onClick={() => { setDone(false); setStep(0); setSelectedPet(null); setSelectedServices([]); setSelectedTime(null); }}
+          className="px-6 py-3 bg-[#16a34a] text-white font-semibold rounded-xl hover:bg-[#15803d] transition-colors"
+          style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        >
           Novo agendamento
         </button>
       </div>
@@ -61,6 +75,7 @@ export default function Agendamento() {
       </div>
 
       <div className="bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-4 md:p-6">
+        {/* Step 0 — choose pet */}
         {step === 0 && (
           <div className="space-y-3">
             <h2 className="text-base font-semibold text-[#111827] mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Escolha o pet</h2>
@@ -81,29 +96,45 @@ export default function Agendamento() {
           </div>
         )}
 
+        {/* Step 1 — choose services (multi-select) */}
         {step === 1 && (
           <div className="space-y-3">
-            <h2 className="text-base font-semibold text-[#111827] mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Escolha o serviço</h2>
-            {servicos.filter(s => !s.nome.includes("Consulta") && !s.nome.includes("Vacin")).map(s => (
-              <button
-                key={s.id}
-                onClick={() => setSelectedService(s.id)}
-                className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${selectedService === s.id ? "border-[#16a34a] bg-[#f0fdf4]" : "border-[#e5e7eb] hover:border-[#d1d5db]"}`}
-              >
-                <div className="w-10 h-10 rounded-xl bg-[#f0fdf4] flex items-center justify-center flex-shrink-0">
-                  <Scissors size={16} className="text-[#16a34a]" />
-                </div>
-                <div className="text-left flex-1">
-                  <p className="font-semibold text-[#111827]">{s.nome}</p>
-                  <p className="text-xs text-[#6b7280]">{s.duracao}</p>
-                </div>
-                <span className="font-bold text-[#16a34a]">R$ {s.preco.toFixed(2)}</span>
-                {selectedService === s.id && <Check size={18} className="text-[#16a34a]" />}
-              </button>
-            ))}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Escolha os serviços</h2>
+              <span className="text-xs text-[#6b7280]">Pode selecionar mais de um</span>
+            </div>
+            {availableServicos.map(s => {
+              const selected = selectedServices.includes(s.id);
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => toggleService(s.id)}
+                  className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${selected ? "border-[#16a34a] bg-[#f0fdf4]" : "border-[#e5e7eb] hover:border-[#d1d5db]"}`}
+                >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${selected ? "bg-[#16a34a]" : "bg-[#f0fdf4]"}`}>
+                    <Scissors size={16} className={selected ? "text-white" : "text-[#16a34a]"} />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="font-semibold text-[#111827]">{s.nome}</p>
+                    <p className="text-xs text-[#6b7280]">{s.duracao}</p>
+                  </div>
+                  <span className="font-bold text-[#16a34a]">R$ {s.preco.toFixed(2)}</span>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${selected ? "border-[#16a34a] bg-[#16a34a]" : "border-[#d1d5db]"}`}>
+                    {selected && <Check size={12} className="text-white" />}
+                  </div>
+                </button>
+              );
+            })}
+            {selectedServices.length > 0 && (
+              <div className="flex items-center justify-between px-1 pt-1">
+                <span className="text-sm text-[#6b7280]">{selectedServices.length} serviço{selectedServices.length > 1 ? "s" : ""} selecionado{selectedServices.length > 1 ? "s" : ""}</span>
+                <span className="font-bold text-[#16a34a]">Total: R$ {total.toFixed(2)}</span>
+              </div>
+            )}
           </div>
         )}
 
+        {/* Step 2 — date and time */}
         {step === 2 && (
           <div className="space-y-5">
             <h2 className="text-base font-semibold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Escolha data e horário</h2>
@@ -134,25 +165,38 @@ export default function Agendamento() {
           </div>
         )}
 
+        {/* Step 3 — confirm */}
         {step === 3 && (
           <div className="space-y-4">
             <h2 className="text-base font-semibold text-[#111827] mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Confirmar agendamento</h2>
             <div className="bg-[#f9fafb] rounded-xl p-4 space-y-3">
-              {[
-                [<Dog size={14} />, "Pet", pet?.nome],
-                [<Scissors size={14} />, "Serviço", service?.nome],
-                [<Calendar size={14} />, "Data", "15/08/2026"],
-                [<Clock size={14} />, "Horário", selectedTime],
-              ].map(([icon, label, value], i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span className="text-[#9ca3af]">{icon as React.ReactNode}</span>
-                  <span className="text-sm text-[#6b7280]">{label as string}</span>
-                  <span className="ml-auto text-sm font-semibold text-[#374151]">{value as string}</span>
+              <div className="flex items-center gap-3">
+                <Dog size={14} className="text-[#9ca3af]" />
+                <span className="text-sm text-[#6b7280]">Pet</span>
+                <span className="ml-auto text-sm font-semibold text-[#374151]">{pet?.nome}</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <Scissors size={14} className="text-[#9ca3af] mt-0.5" />
+                <span className="text-sm text-[#6b7280]">Serviços</span>
+                <div className="ml-auto text-right">
+                  {chosenServices.map(s => (
+                    <p key={s.id} className="text-sm font-semibold text-[#374151]">{s.nome}</p>
+                  ))}
                 </div>
-              ))}
+              </div>
+              <div className="flex items-center gap-3">
+                <Calendar size={14} className="text-[#9ca3af]" />
+                <span className="text-sm text-[#6b7280]">Data</span>
+                <span className="ml-auto text-sm font-semibold text-[#374151]">{selectedDate.split("-").reverse().join("/")}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Clock size={14} className="text-[#9ca3af]" />
+                <span className="text-sm text-[#6b7280]">Horário</span>
+                <span className="ml-auto text-sm font-semibold text-[#374151]">{selectedTime}</span>
+              </div>
               <div className="pt-2 border-t border-[#e5e7eb] flex items-center justify-between">
                 <span className="font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Total</span>
-                <span className="text-xl font-bold text-[#16a34a]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>R$ {service?.preco.toFixed(2)}</span>
+                <span className="text-xl font-bold text-[#16a34a]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>R$ {total.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -169,7 +213,7 @@ export default function Agendamento() {
         {step < STEPS.length - 1 ? (
           <button
             onClick={() => setStep(s => s + 1)}
-            disabled={(step === 0 && !selectedPet) || (step === 1 && !selectedService) || (step === 2 && !selectedTime)}
+            disabled={(step === 0 && !selectedPet) || (step === 1 && selectedServices.length === 0) || (step === 2 && !selectedTime)}
             className="flex-1 py-3 bg-[#16a34a] hover:bg-[#15803d] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
             style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
           >
