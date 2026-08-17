@@ -16,45 +16,42 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left panel */}
-      <div className="hidden lg:flex flex-col justify-between w-[480px] bg-[#15803d] flex-shrink-0 relative overflow-hidden" style={{ paddingTop: "48px", paddingBottom: "48px", paddingRight: "46px", paddingLeft: "46px", marginTop: "3px", marginBottom: "3px" }}>
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Left panel — hidden on mobile, shown on lg+ */}
+      <div
+        className="hidden lg:flex flex-col justify-between lg:w-[440px] xl:w-[480px] bg-[#15803d] flex-shrink-0 relative overflow-hidden"
+        style={{ padding: "48px", margin: "-2px -1px -2px -1px" }}
+      >
         <div>
-          <div className="flex items-center gap-3 mb-16">
+          <div className="flex items-center gap-3 mb-12">
             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
               <PawPrint size={22} className="text-white" />
             </div>
             <div>
-              <span
-                className="text-white font-bold text-xl"
-                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-              >
+              <span className="text-white font-bold text-xl" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 Patinhas
               </span>
-              <span className="text-green-300 font-medium ml-1.5">
-                Pet Shop
-              </span>
+              <span className="text-green-300 font-medium ml-1.5">Pet Shop</span>
             </div>
           </div>
 
-          <h2
-            className="text-white text-3xl font-bold leading-tight mb-4"
-            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-          >
+          <h2 className="text-white text-3xl font-bold leading-tight mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             Bem-vindo ao portal exclusivo para tutores
           </h2>
           <p className="text-green-200 text-base leading-relaxed">
-            Acompanhe seus pets, agende serviços, acompanhe pedidos e muito
-            mais, tudo em um só lugar.
+            Acompanhe seus pets, agende serviços, acompanhe pedidos e muito mais, tudo em um só lugar.
           </p>
 
-          {/* Dog image between text and bullet list */}
-          <div className="flex justify-center" style={{ marginRight: "-45px", marginLeft: "-45px" }}>
+          {/* Dog image — Change 1: mt-0, mx -47px */}
+          <div
+            className="flex justify-center"
+            style={{ marginTop: "0px", marginRight: "-47px", marginLeft: "-47px", marginBottom: "8px" }}
+          >
             <img
               src={dogHero}
               alt="mascote"
-              className="w-full object-contain drop-shadow-2xl"
-              style={{ filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.35))", marginTop: "30px", marginRight: "-57px", marginBottom: "29px", marginLeft: "-61px" }}
+              className="w-full object-contain"
+              style={{ paddingTop: "7px", paddingBottom: "7px" }}
             />
           </div>
         </div>
@@ -70,45 +67,33 @@ export default function Login() {
               "Visualizar e rastrear seus pedidos",
               "Gerenciar dados e preferências",
             ].map((item) => (
-              <div
-                key={item}
-                className="flex items-center gap-2.5 text-green-100 text-sm"
-              >
+              <div key={item} className="flex items-center gap-2.5 text-green-100 text-sm">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
                 {item}
               </div>
             ))}
           </div>
           <p className="text-green-400 text-xs mt-4 pt-4 border-t border-white/10">
-            Powered by{" "}
-            <span className="font-semibold text-white">Petzio ERP</span>
+            Powered by <span className="font-semibold text-white">Petzio ERP</span>
           </p>
         </div>
       </div>
 
       {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-[#f9fafb]">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-[#f9fafb] min-h-screen lg:min-h-0">
         <div className="w-full max-w-[380px]">
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-10 lg:hidden">
             <div className="w-9 h-9 rounded-xl bg-[#16a34a] flex items-center justify-center">
               <PawPrint size={18} className="text-white" />
             </div>
-            <div>
-              <span
-                className="font-bold text-lg text-[#111827]"
-                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-              >
-                Patinhas Pet Shop
-              </span>
-            </div>
+            <span className="font-bold text-lg text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              Patinhas Pet Shop
+            </span>
           </div>
 
           <div className="mb-8">
-            <h1
-              className="text-2xl font-bold text-[#111827] mb-1"
-              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-            >
+            <h1 className="text-2xl font-bold text-[#111827] mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
               Olá, tutor! 🐾
             </h1>
             <p className="text-[#6b7280] text-sm">
@@ -118,14 +103,9 @@ export default function Login() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-1.5">
-                E-mail
-              </label>
+              <label className="block text-xs font-semibold text-[#374151] mb-1.5">E-mail</label>
               <div className="relative">
-                <Mail
-                  size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
-                />
+                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
                 <input
                   type="email"
                   value={email}
@@ -136,14 +116,9 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-1.5">
-                Senha
-              </label>
+              <label className="block text-xs font-semibold text-[#374151] mb-1.5">Senha</label>
               <div className="relative">
-                <Lock
-                  size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
-                />
+                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
                 <input
                   type={showPass ? "text" : "password"}
                   value={senha}
@@ -170,10 +145,7 @@ export default function Login() {
                 />
                 <span className="text-sm text-[#374151]">Lembrar de mim</span>
               </label>
-              <button
-                type="button"
-                className="text-sm text-[#16a34a] hover:text-[#15803d] font-medium"
-              >
+              <button type="button" className="text-sm text-[#16a34a] hover:text-[#15803d] font-medium">
                 Esqueci minha senha
               </button>
             </div>
@@ -189,9 +161,7 @@ export default function Login() {
 
           <p className="text-center text-xs text-[#9ca3af] mt-6">
             Problemas para acessar?{" "}
-            <button className="text-[#16a34a] hover:underline font-medium">
-              Fale conosco
-            </button>
+            <button className="text-[#16a34a] hover:underline font-medium">Fale conosco</button>
           </p>
         </div>
       </div>
