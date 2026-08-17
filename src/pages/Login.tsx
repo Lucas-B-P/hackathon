@@ -1,22 +1,34 @@
 import { useState } from "react"
-import { useNavigate } from "react-router"
+import { Link, useNavigate } from "react-router"
 import { Eye, EyeOff, Lock, Mail, PawPrint } from "lucide-react"
 import dogHero from "../img/dog-hero.jpg"
+import { login } from "../services/api"
 
 export default function Login() {
   const navigate = useNavigate()
   const [showPass, setShowPass] = useState(false)
   const [email, setEmail] = useState("joao@email.com")
-  const [senha, setSenha] = useState("••••••••")
+  const [senha, setSenha] = useState("")
   const [lembrar, setLembrar] = useState(false)
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    navigate("/portal")
+    setError("")
+    setLoading(true)
+    try {
+      const result = await login(email, senha)
+      navigate(result.user.role === "cliente" ? "/portal" : "/admin")
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "Falha ao entrar")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <div className="auth-page-enter min-h-screen flex flex-col lg:flex-row">
       {/* Left panel — hidden on mobile, shown on lg+ */}
       <div
         className="hidden lg:flex flex-col justify-between lg:w-[440px] xl:w-[480px] bg-[#15803d] flex-shrink-0 relative overflow-hidden"
@@ -95,6 +107,12 @@ export default function Login() {
             </p>
           </div>
 
+          {error && (
+            <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2 mb-4">
+              {error}
+            </p>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-[#374151] mb-1.5">E-mail</label>
@@ -139,9 +157,9 @@ export default function Login() {
                 />
                 <span className="text-sm text-[#374151]">Lembrar de mim</span>
               </label>
-              <button type="button" className="text-sm text-[#16a34a] hover:text-[#15803d] font-medium">
+              <Link to="/esqueci-senha" className="text-sm text-[#16a34a] hover:text-[#15803d] font-medium">
                 Esqueci minha senha
-              </button>
+              </Link>
             </div>
 
             <button
@@ -149,13 +167,22 @@ export default function Login() {
               className="w-full py-3 bg-[#16a34a] hover:bg-[#15803d] text-white font-semibold text-sm rounded-xl transition-colors shadow-sm mt-2"
               style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
             >
-              Entrar no Portal
+              {loading ? "Entrando..." : "Entrar no Portal"}
             </button>
           </form>
 
+          <p className="text-center text-sm text-[#6b7280] mt-5">
+            Ainda não possui uma conta?{" "}
+            <Link to="/cadastro" className="text-[#16a34a] font-semibold hover:underline">
+              Criar conta
+            </Link>
+          </p>
+
           <p className="text-center text-xs text-[#9ca3af] mt-6">
             Problemas para acessar?{" "}
-            <button className="text-[#16a34a] hover:underline font-medium">Fale conosco</button>
+            <Link to="/contato" className="text-[#16a34a] hover:underline font-medium">
+              Fale conosco
+            </Link>
           </p>
         </div>
       </div>
