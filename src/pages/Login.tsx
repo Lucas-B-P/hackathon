@@ -42,18 +42,6 @@ export default function Login() {
             Acompanhe seus pets, agende serviços, acompanhe pedidos e muito mais, tudo em um só lugar.
           </p>
 
-          {/* Dog image — Change 1: mt-0, mx -47px */}
-          <div
-            className="flex justify-center"
-            style={{ marginTop: "0px", marginRight: "-47px", marginLeft: "-47px", marginBottom: "8px" }}
-          >
-            <img
-              src={dogHero}
-              alt="mascote"
-              className="w-full object-contain"
-              style={{ paddingTop: "7px", paddingBottom: "7px" }}
-            />
-          </div>
         </div>
 
         <div className="space-y-3">
@@ -77,6 +65,7 @@ export default function Login() {
             Powered by <span className="font-semibold text-white">Petzio ERP</span>
           </p>
         </div>
+
       </div>
 
       {/* Right panel */}
