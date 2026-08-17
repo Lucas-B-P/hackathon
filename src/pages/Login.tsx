@@ -35,37 +35,42 @@ export default function Login() {
             </div>
           </div>
 
-          <h2 className="text-white text-3xl font-bold leading-tight mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Bem-vindo ao portal exclusivo para tutores
-          </h2>
-          <p className="text-green-200 text-base leading-relaxed">
-            Acompanhe seus pets, agende serviços, acompanhe pedidos e muito mais, tudo em um só lugar.
-          </p>
+          <div className="pt-10">
+            <h2 className="text-white text-3xl font-bold leading-tight mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              Bem-vindo ao portal exclusivo para tutores
+            </h2>
+            <p className="text-green-200 text-base leading-relaxed mb-10">
+              Acompanhe seus pets, agende serviços, acompanhe pedidos e muito mais, tudo em um só lugar.
+            </p>
 
-        </div>
-
-        <div className="space-y-3">
-          <p className="text-green-300 text-xs font-semibold uppercase tracking-wider">
-            O que você pode fazer aqui
-          </p>
-          <div className="space-y-2">
-            {[
-              "Agendar banho, tosa e consultas",
-              "Acompanhar o histórico dos seus pets",
-              "Visualizar e rastrear seus pedidos",
-              "Gerenciar dados e preferências",
-            ].map((item) => (
-              <div key={item} className="flex items-center gap-2.5 text-green-100 text-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
-                {item}
-              </div>
-            ))}
+            <div className="space-y-3">
+            <p className="text-green-300 text-xs font-semibold uppercase tracking-wider">
+              O que você pode fazer aqui
+            </p>
+            <div className="space-y-2">
+              {[
+                "Agendar banho, tosa e consultas",
+                "Acompanhar o histórico dos seus pets",
+                "Visualizar e rastrear seus pedidos",
+                "Gerenciar dados e preferências",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-2.5 text-green-100 text-sm">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+                  {item}
+                </div>
+              ))}
+            </div>
+            </div>
           </div>
-          <p className="text-green-400 text-xs mt-4 pt-4 border-t border-white/10">
-            Powered by <span className="font-semibold text-white">Petzio ERP</span>
-          </p>
         </div>
 
+        <div className="mt-auto -mx-14 -mb-12 overflow-hidden rounded-t-[65px]">
+          <img
+            src={dogHero}
+            alt="Golden Retriever — tudo para o amor do seu pet"
+            className="w-full h-[350px] object-cover object-top scale-105"
+          />
+        </div>
       </div>
 
       {/* Right panel */}
