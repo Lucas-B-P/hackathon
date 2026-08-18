@@ -1,12 +1,20 @@
-import { useEffect, useState } from "react";
-import { Search, Plus, ChevronRight, Filter } from "lucide-react";
-import { getAdminClients, type AdminClient } from "../../services/api";
+import { useState } from "react";
+import { Search, Plus, ChevronRight, X, Check } from "lucide-react";
+import { clientes } from "../../data/mockData";
+
+const emptyForm = { nome: "", cpf: "", telefone: "", email: "", nascimento: "", endereco: "" };
 
 export default function Clientes() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("Todos");
-  const [clientes, setClientes] = useState<AdminClient[]>([]);
-  useEffect(() => { getAdminClients().then((result) => setClientes(result.data)).catch(() => setClientes([])); }, []);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const [saved, setSaved] = useState(false);
+
+  function handleSave() {
+    setSaved(true);
+    setTimeout(() => { setSaved(false); setModalOpen(false); setForm(emptyForm); }, 1400);
+  }
   const filtered = clientes.filter(c =>
     (c.nome.toLowerCase().includes(search.toLowerCase()) || c.telefone.includes(search)) &&
     (statusFilter === "Todos" || c.status === statusFilter)
@@ -19,9 +27,8 @@ export default function Clientes() {
           <h1 className="text-xl font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Clientes</h1>
           <p className="text-sm text-[#6b7280]">{clientes.length} tutores cadastrados</p>
         </div>
-        <button className="flex items-center gap-2 bg-[#16a34a] hover:bg-[#15803d] text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          <Plus size={16} />
-          Novo cliente
+        <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 bg-[#16a34a] hover:bg-[#15803d] text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <Plus size={16} />Novo cliente
         </button>
       </div>
 
@@ -93,6 +100,57 @@ export default function Clientes() {
           <div className="text-center py-12 text-[#9ca3af] text-sm">Nenhum cliente encontrado.</div>
         )}
       </div>
+
+      {/* Modal Novo Cliente */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-[#f3f4f6]">
+              <h2 className="text-lg font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Novo cliente</h2>
+              <button onClick={() => { setModalOpen(false); setForm(emptyForm); }} className="p-2 hover:bg-[#f3f4f6] rounded-xl text-[#9ca3af]"><X size={20} /></button>
+            </div>
+            {saved ? (
+              <div className="p-10 flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-[#dcfce7] flex items-center justify-center"><Check size={28} className="text-[#16a34a]" /></div>
+                <p className="font-semibold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Cliente cadastrado!</p>
+              </div>
+            ) : (
+              <div className="p-5 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#374151] mb-1.5">Nome completo *</label>
+                  <input value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} placeholder="Ex: Maria Silva" className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#374151] mb-1.5">CPF</label>
+                    <input value={form.cpf} onChange={e => setForm(f => ({ ...f, cpf: e.target.value }))} placeholder="000.000.000-00" className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#374151] mb-1.5">Telefone *</label>
+                    <input value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))} placeholder="(11) 99999-0000" className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#374151] mb-1.5">E-mail</label>
+                  <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="cliente@email.com" className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#374151] mb-1.5">Data de nascimento</label>
+                  <input type="date" value={form.nascimento} onChange={e => setForm(f => ({ ...f, nascimento: e.target.value }))} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#374151] mb-1.5">Endereço</label>
+                  <input value={form.endereco} onChange={e => setForm(f => ({ ...f, endereco: e.target.value }))} placeholder="Rua, número, bairro..." className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
+                </div>
+                <div className="flex gap-3 pt-1">
+                  <button onClick={() => { setModalOpen(false); setForm(emptyForm); }} className="flex-1 py-2.5 border border-[#e5e7eb] rounded-xl text-sm font-medium text-[#374151] hover:bg-[#f3f4f6]">Cancelar</button>
+                  <button onClick={handleSave} disabled={!form.nome || !form.telefone} className="flex-1 py-2.5 bg-[#16a34a] hover:bg-[#15803d] disabled:opacity-40 text-white font-semibold rounded-xl transition-colors" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Cadastrar</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

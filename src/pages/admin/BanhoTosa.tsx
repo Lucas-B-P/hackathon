@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronRight, MessageSquare } from "lucide-react";
-import { getGroomingQueue, updateGroomingStatus, type GroomingAppointment } from "../../services/api";
+import { agendamentos } from "../../data/mockData";
 
 const FLOW = ["Agendado", "Recepcionado", "Em atendimento", "Finalizado", "Entregue"];
 const FLOW_COLORS: Record<string, string> = {
@@ -17,14 +17,19 @@ const GROOMING = ["Banho", "Tosa", "Banho + Tosa", "Tosa Higiênica", "Corte de 
 type PetStatus = { id: number; status: string; obs: string };
 
 export default function BanhoTosa() {
-  const [pets, setPets] = useState<GroomingAppointment[]>([]);
-  useEffect(() => { getGroomingQueue().then((result) => setPets(result.data)).catch(() => setPets([])); }, []);
-  const statuses = Object.fromEntries(pets.map((p) => [p.id, { id: p.id, status: p.status, obs: p.notes ?? "" }]));
+  const pets = agendamentos.filter(a => GROOMING.some(g => a.servico.includes(g)));
+  const [statuses, setStatuses] = useState<Record<number, PetStatus>>(
+    Object.fromEntries(pets.map(p => [p.id, { id: p.id, status: p.status, obs: "" }]))
+  );
   const [obsOpen, setObsOpen] = useState<number | null>(null);
 
-  const advance = async (id: number) => {
-    const cur = statuses[id].status; const idx = FLOW.indexOf(cur); const next = idx < FLOW.length - 1 ? FLOW[idx + 1] : cur;
-    if (next !== cur) { const updated = await updateGroomingStatus(id, next); setPets((items) => items.map((item) => item.id === id ? { ...item, status: updated.status } : item)); }
+  const advance = (id: number) => {
+    setStatuses(prev => {
+      const cur = prev[id].status;
+      const idx = FLOW.indexOf(cur);
+      const next = idx < FLOW.length - 1 ? FLOW[idx + 1] : cur;
+      return { ...prev, [id]: { ...prev[id], status: next } };
+    });
   };
 
   return (
@@ -69,15 +74,15 @@ export default function BanhoTosa() {
               <div className="mt-4 space-y-1.5">
                 <div className="flex justify-between text-xs">
                   <span className="text-[#9ca3af]">Serviço</span>
-                  <span className="font-medium text-[#374151]">{pet.service}</span>
+                  <span className="font-medium text-[#374151]">{pet.servico}</span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-[#9ca3af]">Horário</span>
-                  <span className="font-medium text-[#374151]">{new Date(pet.starts_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                  <span className="font-medium text-[#374151]">{pet.horario}</span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-[#9ca3af]">Responsável</span>
-                  <span className="font-medium text-[#374151]">{pet.employee}</span>
+                  <span className="font-medium text-[#374151]">{pet.funcionario}</span>
                 </div>
               </div>
 

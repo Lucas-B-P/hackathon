@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Plus, Clock, DollarSign, X } from "lucide-react";
-import { getAdminServices, type AdminService } from "../../services/api";
+import { servicos } from "../../data/mockData";
 
 export default function Servicos() {
   const [modalOpen, setModalOpen] = useState(false);
-  const [servicos, setServicos] = useState<AdminService[]>([]);
-  useEffect(() => { getAdminServices().then((result) => setServicos(result.data)).catch(() => setServicos([])); }, []);
 
   return (
     <div className="p-4 md:p-6 space-y-5">
@@ -29,21 +27,21 @@ export default function Servicos() {
           <div key={s.id} className="bg-white rounded-xl border border-[#e5e7eb] shadow-sm p-5 hover:border-[#86efac] hover:shadow-md transition-all cursor-pointer">
             <div className="flex items-start justify-between mb-3">
               <div>
-                <h3 className="font-bold text-[#111827] text-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{s.name}</h3>
-                <p className="text-xs text-[#6b7280] mt-0.5">{s.description}</p>
+                <h3 className="font-bold text-[#111827] text-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{s.nome}</h3>
+                <p className="text-xs text-[#6b7280] mt-0.5">{s.descricao}</p>
               </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium flex-shrink-0 ml-2 ${s.active ? "bg-[#dcfce7] text-[#15803d]" : "bg-gray-100 text-gray-500"}`}>
-                  {s.active ? "Ativo" : "Inativo"}
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium flex-shrink-0 ml-2 ${s.status === "Ativo" ? "bg-[#dcfce7] text-[#15803d]" : "bg-gray-100 text-gray-500"}`}>
+                {s.status}
               </span>
             </div>
             <div className="flex items-center gap-4 mt-4 pt-3 border-t border-[#f3f4f6]">
               <div className="flex items-center gap-1.5 text-xs text-[#6b7280]">
                 <Clock size={13} />
-                <span>{s.duration_minutes} min</span>
+                <span>{s.duracao}</span>
               </div>
               <div className="flex items-center gap-1.5 text-sm font-bold text-[#111827]">
                 <DollarSign size={13} className="text-[#16a34a]" />
-                <span>R$ {Number(s.price).toFixed(2)}</span>
+                <span>R$ {s.preco.toFixed(2)}</span>
               </div>
             </div>
             <div className="mt-2">

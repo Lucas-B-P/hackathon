@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { Search, Plus, X } from "lucide-react";
-import { getAdminPets, type AdminPet } from "../../services/api";
+import { useState } from "react";
+import { Search, Plus, X, Check } from "lucide-react";
+import { pets } from "../../data/mockData";
+import { clientes } from "../../data/mockData";
 
 const petHistory = [
   { tipo: "Banho + Tosa", data: "08/08/2026", obs: "Comportamento calmo" },
@@ -9,15 +10,23 @@ const petHistory = [
   { tipo: "Banho", data: "01/06/2026", obs: "Sem observações" },
 ];
 
+const emptyForm = { nome: "", especie: "Cachorro", raca: "", sexo: "Macho", nascimento: "", peso: "", tutorId: "" };
+
 export default function Pets() {
   const [search, setSearch] = useState("");
-  const [pets, setPets] = useState<AdminPet[]>([]);
-  const [selected, setSelected] = useState<AdminPet | null>(null);
-  useEffect(() => { getAdminPets().then((result) => setPets(result.data)).catch(() => setPets([])); }, []);
+  const [selected, setSelected] = useState<typeof pets[0] | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const [saved, setSaved] = useState(false);
+
+  function handleSave() {
+    setSaved(true);
+    setTimeout(() => { setSaved(false); setModalOpen(false); setForm(emptyForm); }, 1400);
+  }
   const filtered = pets.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    p.nome.toLowerCase().includes(search.toLowerCase()) ||
     p.tutor.toLowerCase().includes(search.toLowerCase()) ||
-    (p.breed ?? "").toLowerCase().includes(search.toLowerCase())
+    p.raca.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -27,9 +36,8 @@ export default function Pets() {
           <h1 className="text-xl font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Pets</h1>
           <p className="text-sm text-[#6b7280]">{pets.length} animais cadastrados</p>
         </div>
-        <button className="flex items-center gap-2 bg-[#16a34a] hover:bg-[#15803d] text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          <Plus size={16} />
-          Novo pet
+        <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 bg-[#16a34a] hover:bg-[#15803d] text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <Plus size={16} />Novo pet
         </button>
       </div>
 
@@ -53,12 +61,12 @@ export default function Pets() {
           >
             <div className="flex items-start gap-3">
               <div className="w-12 h-12 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-2xl flex-shrink-0">
-                🐾
+                {p.foto}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-[#111827] text-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{p.name}</p>
-                <p className="text-xs text-[#6b7280]">{p.breed || "Sem raça"}</p>
-                <p className="text-xs text-[#9ca3af] mt-0.5">{p.species} · {p.sex || "Não informado"}</p>
+                <p className="font-bold text-[#111827] text-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{p.nome}</p>
+                <p className="text-xs text-[#6b7280]">{p.raca}</p>
+                <p className="text-xs text-[#9ca3af] mt-0.5">{p.especie} · {p.sexo} · {p.idade}</p>
               </div>
             </div>
             <div className="mt-3 pt-3 border-t border-[#f3f4f6] flex items-center justify-between">
@@ -68,7 +76,7 @@ export default function Pets() {
               </div>
               <div className="text-right">
                 <p className="text-[11px] text-[#9ca3af]">Último atend.</p>
-                <p className="text-xs font-medium text-[#374151]">Sem registro</p>
+                <p className="text-xs font-medium text-[#374151]">{p.ultimoAtendimento}</p>
               </div>
             </div>
           </div>
@@ -81,10 +89,10 @@ export default function Pets() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-[#f3f4f6]">
               <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-3xl">🐾</div>
+                <div className="w-14 h-14 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-3xl">{selected.foto}</div>
                 <div>
-                  <h2 className="text-xl font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{selected.name}</h2>
-                  <p className="text-sm text-[#6b7280]">{selected.breed || "Sem raça"} · {selected.species}</p>
+                  <h2 className="text-xl font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{selected.nome}</h2>
+                  <p className="text-sm text-[#6b7280]">{selected.raca} · {selected.especie}</p>
                 </div>
               </div>
               <button onClick={() => setSelected(null)} className="p-2 hover:bg-[#f3f4f6] rounded-xl text-[#9ca3af]"><X size={20} /></button>
@@ -93,9 +101,10 @@ export default function Pets() {
               <div className="space-y-3">
                 <h3 className="text-xs font-semibold text-[#9ca3af] uppercase tracking-wide">Informações</h3>
                 {[
-                  ["Sexo", selected.sex || "Não informado"],
-                  ["Nascimento", selected.birth_date || "Não informado"],
-                  ["Peso", selected.weight ? `${selected.weight} kg` : "Não informado"],
+                  ["Sexo", selected.sexo],
+                  ["Nascimento", selected.nascimento],
+                  ["Idade", selected.idade],
+                  ["Peso", selected.peso],
                   ["Tutor", selected.tutor],
                 ].map(([k, v]) => (
                   <div key={k} className="flex items-center justify-between py-1.5 border-b border-[#f3f4f6]">
@@ -117,6 +126,70 @@ export default function Pets() {
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Novo Pet */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-[#f3f4f6]">
+              <h2 className="text-lg font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Novo pet</h2>
+              <button onClick={() => { setModalOpen(false); setForm(emptyForm); }} className="p-2 hover:bg-[#f3f4f6] rounded-xl text-[#9ca3af]"><X size={20} /></button>
+            </div>
+            {saved ? (
+              <div className="p-10 flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-[#dcfce7] flex items-center justify-center"><Check size={28} className="text-[#16a34a]" /></div>
+                <p className="font-semibold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Pet cadastrado!</p>
+              </div>
+            ) : (
+              <div className="p-5 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#374151] mb-1.5">Nome do pet *</label>
+                  <input value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} placeholder="Ex: Rex, Luna..." className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#374151] mb-1.5">Tutor *</label>
+                  <select value={form.tutorId} onChange={e => setForm(f => ({ ...f, tutorId: e.target.value }))} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a] bg-white">
+                    <option value="">Selecione o tutor...</option>
+                    {clientes.map(c => <option key={c.id} value={String(c.id)}>{c.nome}</option>)}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#374151] mb-1.5">Espécie *</label>
+                    <select value={form.especie} onChange={e => setForm(f => ({ ...f, especie: e.target.value }))} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a] bg-white">
+                      {["Cachorro", "Gato", "Ave", "Roedor", "Outro"].map(e => <option key={e}>{e}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#374151] mb-1.5">Sexo *</label>
+                    <select value={form.sexo} onChange={e => setForm(f => ({ ...f, sexo: e.target.value }))} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a] bg-white">
+                      {["Macho", "Fêmea"].map(s => <option key={s}>{s}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#374151] mb-1.5">Raça</label>
+                  <input value={form.raca} onChange={e => setForm(f => ({ ...f, raca: e.target.value }))} placeholder="Ex: Golden Retriever, SRD..." className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#374151] mb-1.5">Nascimento</label>
+                    <input type="date" value={form.nascimento} onChange={e => setForm(f => ({ ...f, nascimento: e.target.value }))} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#374151] mb-1.5">Peso (kg)</label>
+                    <input value={form.peso} onChange={e => setForm(f => ({ ...f, peso: e.target.value }))} placeholder="8,5" className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
+                  </div>
+                </div>
+                <div className="flex gap-3 pt-1">
+                  <button onClick={() => { setModalOpen(false); setForm(emptyForm); }} className="flex-1 py-2.5 border border-[#e5e7eb] rounded-xl text-sm font-medium text-[#374151] hover:bg-[#f3f4f6]">Cancelar</button>
+                  <button onClick={handleSave} disabled={!form.nome || !form.tutorId} className="flex-1 py-2.5 bg-[#16a34a] hover:bg-[#15803d] disabled:opacity-40 text-white font-semibold rounded-xl transition-colors" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Cadastrar</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

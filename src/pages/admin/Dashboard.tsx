@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { TrendingUp, Calendar, Users, Package, DollarSign, AlertTriangle } from "lucide-react";
-import { getAdminDashboard, type AdminDashboard } from "../../services/api";
+import { agendamentos, faturamentoMensal, vendasCategoria, produtos } from "../../data/mockData";
 
 const COLORS = ["#16a34a", "#86efac", "#4ade80", "#bbf7d0", "#dcfce7"];
 const STATUS_COLORS: Record<string, string> = {
@@ -12,17 +11,12 @@ const STATUS_COLORS: Record<string, string> = {
   Cancelado: "bg-red-100 text-red-700",
 };
 
-let dashboardKpis: AdminDashboard["kpis"] | undefined;
-
-const KPI = ({ label, value, sub, icon: Icon, color }: { label: string; value: string; sub: string; icon: any; color: string }) => {
-  const money = (amount: number) => `R$ ${amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-  const realValue = label === "Vendas hoje" ? money(dashboardKpis?.salesToday ?? 0) : label.includes("Faturamento") ? money(dashboardKpis?.monthlyRevenue ?? 0) : label === "Agendamentos hoje" ? String(dashboardKpis?.appointmentsToday ?? 0) : label === "Clientes ativos" ? String(dashboardKpis?.activeClients ?? 0) : label === "Contas a receber" ? money(dashboardKpis?.receivable ?? 0) : value;
-  return (
+const KPI = ({ label, value, sub, icon: Icon, color }: { label: string; value: string; sub: string; icon: any; color: string }) => (
   <div className="bg-white rounded-xl p-5 border border-[#e5e7eb] shadow-sm">
     <div className="flex items-start justify-between">
       <div>
         <p className="text-xs font-medium text-[#6b7280] mb-1">{label}</p>
-        <p className="text-2xl font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{realValue}</p>
+        <p className="text-2xl font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{value}</p>
         <p className="text-xs text-[#9ca3af] mt-1">{sub}</p>
       </div>
       <div className={`p-2.5 rounded-xl ${color}`}>
@@ -30,19 +24,10 @@ const KPI = ({ label, value, sub, icon: Icon, color }: { label: string; value: s
       </div>
     </div>
   </div>
-  );
-};
+);
 
 export default function Dashboard() {
-  const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
-  useEffect(() => { getAdminDashboard().then((result) => setDashboard(result.data)).catch(() => setDashboard(null)); }, []);
-  const estoquesBaixos = dashboard?.lowStock ?? [];
-  const agendamentos = dashboard?.agenda ?? [];
-  const faturamentoMensal = dashboard?.revenue.map((item) => ({ mes: item.month, receita: Number(item.revenue), despesas: 0 })) ?? [];
-  const totalCategories = dashboard?.categories.reduce((sum, item) => sum + Number(item.total), 0) || 1;
-  const vendasCategoria = dashboard?.categories.map((item) => ({ name: item.name, value: Math.round(Number(item.total) / totalCategories * 100) })) ?? [];
-  const kpis = dashboard?.kpis;
-  dashboardKpis = kpis;
+  const estoquesBaixos = produtos.filter(p => p.estoque <= p.estoqueMin);
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -130,10 +115,10 @@ export default function Dashboard() {
           <div className="divide-y divide-[#f3f4f6]">
             {agendamentos.slice(0, 5).map(ag => (
               <div key={ag.id} className="flex items-center gap-3 px-5 py-3">
-                <span className="text-xs font-mono text-[#6b7280] w-10 flex-shrink-0">{ag.time}</span>
+                <span className="text-xs font-mono text-[#6b7280] w-10 flex-shrink-0">{ag.horario}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-[#111827] truncate">{ag.pet}</p>
-                  <p className="text-[11px] text-[#9ca3af] truncate">{ag.service}</p>
+                  <p className="text-[11px] text-[#9ca3af] truncate">{ag.servico} · {ag.funcionario}</p>
                 </div>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${STATUS_COLORS[ag.status] || "bg-gray-100 text-gray-600"}`}>
                   {ag.status}
@@ -153,14 +138,14 @@ export default function Dashboard() {
             {estoquesBaixos.map(p => (
               <div key={p.id} className="flex items-center gap-3 px-5 py-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-[#111827] truncate">{p.name}</p>
-                  <p className="text-[11px] text-[#9ca3af]">{p.category} · SKU: {p.sku}</p>
+                  <p className="text-xs font-semibold text-[#111827] truncate">{p.nome}</p>
+                  <p className="text-[11px] text-[#9ca3af]">{p.categoria} · SKU: {p.sku}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-bold text-orange-600">{p.stock}</p>
-                  <p className="text-[10px] text-[#9ca3af]">mín: {p.minimum_stock}</p>
+                  <p className="text-sm font-bold text-orange-600">{p.estoque}</p>
+                  <p className="text-[10px] text-[#9ca3af]">mín: {p.estoqueMin}</p>
                 </div>
-                {p.stock === 0 && (
+                {p.estoque === 0 && (
                   <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-medium">Esgotado</span>
                 )}
               </div>

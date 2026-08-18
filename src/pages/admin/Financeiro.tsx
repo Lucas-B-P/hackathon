@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { TrendingUp, TrendingDown, DollarSign, AlertCircle, Plus } from "lucide-react";
-import { getAdminFinance, type AdminFinance } from "../../services/api";
+import { TrendingUp, TrendingDown, DollarSign, AlertCircle, Plus, X, Check } from "lucide-react";
+import { faturamentoMensal, contasReceber, contasPagar } from "../../data/mockData";
+
+const emptyLanc = { descricao: "", tipo: "Receita", categoria: "", valor: "", vencimento: "", forma: "PIX", obs: "" };
 
 const STATUS_CR: Record<string, string> = {
   Pendente: "bg-amber-50 text-amber-600",
@@ -14,18 +16,20 @@ const STATUS_CP: Record<string, string> = {
 
 export default function Financeiro() {
   const [tab, setTab] = useState<"receber" | "pagar">("receber");
-  const [finance, setFinance] = useState<AdminFinance | null>(null);
-  useEffect(() => { getAdminFinance().then((result) => setFinance(result.data)).catch(() => setFinance(null)); }, []);
-  const faturamentoMensal = finance?.revenue.map((item) => ({ mes: item.month, receita: Number(item.revenue), despesas: 0 })) ?? [];
-  const mapEntry = (item: AdminFinance["entries"][number]) => ({ ...item, descricao: item.description, categoria: item.category, valor: Number(item.amount), vencimento: new Date(item.due_date).toLocaleDateString("pt-BR"), forma: item.payment_method ?? "—" });
-  const contasReceber = finance?.entries.filter((item) => item.type === "RECEBER").map(mapEntry) ?? [];
-  const contasPagar = finance?.entries.filter((item) => item.type === "PAGAR").map(mapEntry) ?? [];
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState(emptyLanc);
+  const [saved, setSaved] = useState(false);
 
-  const receita = finance?.summary.revenue ?? 0;
-  const despesas = finance?.summary.expenses ?? 0;
-  const lucro = finance?.summary.profit ?? 0;
-  const aReceber = finance?.summary.receivable ?? 0;
-  const aPagar = finance?.summary.payable ?? 0;
+  function handleSave() {
+    setSaved(true);
+    setTimeout(() => { setSaved(false); setModalOpen(false); setForm(emptyLanc); }, 1400);
+  }
+
+  const receita = faturamentoMensal.at(-1)!.receita;
+  const despesas = faturamentoMensal.at(-1)!.despesas;
+  const lucro = receita - despesas;
+  const aReceber = contasReceber.filter(c => c.status === "Pendente").reduce((a, c) => a + c.valor, 0);
+  const aPagar = contasPagar.filter(c => c.status === "Pendente").reduce((a, c) => a + c.valor, 0);
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -34,9 +38,8 @@ export default function Financeiro() {
           <h1 className="text-xl font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Financeiro</h1>
           <p className="text-sm text-[#6b7280]">Resumo financeiro — Agosto 2026</p>
         </div>
-        <button className="flex items-center gap-2 bg-[#16a34a] hover:bg-[#15803d] text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          <Plus size={16} />
-          Lançamento
+        <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 bg-[#16a34a] hover:bg-[#15803d] text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <Plus size={16} />Lançamento
         </button>
       </div>
 
@@ -119,6 +122,66 @@ export default function Financeiro() {
           </table>
         </div>
       </div>
+
+      {/* Modal Lançamento */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-[#f3f4f6]">
+              <h2 className="text-lg font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Novo lançamento</h2>
+              <button onClick={() => { setModalOpen(false); setForm(emptyLanc); }} className="p-2 hover:bg-[#f3f4f6] rounded-xl text-[#9ca3af]"><X size={20} /></button>
+            </div>
+            {saved ? (
+              <div className="p-10 flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-[#dcfce7] flex items-center justify-center"><Check size={28} className="text-[#16a34a]" /></div>
+                <p className="font-semibold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Lançamento registrado!</p>
+              </div>
+            ) : (
+              <div className="p-5 space-y-4">
+                <div className="flex bg-[#f3f4f6] rounded-xl p-1 gap-1">
+                  {["Receita", "Despesa"].map(t => (
+                    <button key={t} onClick={() => setForm(f => ({ ...f, tipo: t }))} className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${form.tipo === t ? `${t === "Receita" ? "bg-[#16a34a] text-white" : "bg-red-500 text-white"}` : "text-[#6b7280]"}`}>{t}</button>
+                  ))}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#374151] mb-1.5">Descrição *</label>
+                  <input value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} placeholder="Ex: Recebimento de serviço, Pagamento fornecedor..." className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#374151] mb-1.5">Valor (R$) *</label>
+                    <input value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} placeholder="0,00" className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#374151] mb-1.5">Vencimento *</label>
+                    <input type="date" value={form.vencimento} onChange={e => setForm(f => ({ ...f, vencimento: e.target.value }))} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#374151] mb-1.5">Categoria</label>
+                    <input value={form.categoria} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))} placeholder="Ex: Serviços, Fornecedor..." className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#374151] mb-1.5">Forma</label>
+                    <select value={form.forma} onChange={e => setForm(f => ({ ...f, forma: e.target.value }))} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a] bg-white">
+                      {["PIX", "Dinheiro", "Débito", "Crédito", "Boleto", "Transferência"].map(m => <option key={m}>{m}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#374151] mb-1.5">Observações</label>
+                  <textarea value={form.obs} onChange={e => setForm(f => ({ ...f, obs: e.target.value }))} rows={2} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a] resize-none" />
+                </div>
+                <div className="flex gap-3 pt-1">
+                  <button onClick={() => { setModalOpen(false); setForm(emptyLanc); }} className="flex-1 py-2.5 border border-[#e5e7eb] rounded-xl text-sm font-medium text-[#374151] hover:bg-[#f3f4f6]">Cancelar</button>
+                  <button onClick={handleSave} disabled={!form.descricao || !form.valor || !form.vencimento} className="flex-1 py-2.5 bg-[#16a34a] hover:bg-[#15803d] disabled:opacity-40 text-white font-semibold rounded-xl transition-colors" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Registrar</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

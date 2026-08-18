@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-import { getAdminOrders, updateAdminOrderStatus, type AdminOrder } from "../../services/api";
 import { pedidosCliente } from "../../data/mockData";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -17,8 +15,6 @@ const todos = [
 ];
 
 export default function Pedidos() {
-  const [todos, setTodos] = useState<AdminOrder[]>([]);
-  useEffect(() => { getAdminOrders().then((result) => setTodos(result.data)).catch(() => setTodos([])); }, []);
   return (
     <div className="p-6 space-y-5">
       <div>
@@ -39,11 +35,11 @@ export default function Pedidos() {
             {todos.map(p => (
               <tr key={p.id} className="hover:bg-[#fafafa] transition-colors cursor-pointer">
                 <td className="px-4 py-3 font-mono text-xs font-semibold text-[#374151]">{p.id}</td>
-                <td className="px-4 py-3 text-xs text-[#6b7280]">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
-                <td className="px-4 py-3 text-[#374151] max-w-xs truncate"><span className="block">{p.products}</span><span className="text-xs text-[#9ca3af]">{p.customer}</span></td>
-                <td className="px-4 py-3 font-semibold text-[#111827]">R$ {Number(p.total).toFixed(2)}</td>
+                <td className="px-4 py-3 text-xs text-[#6b7280]">{p.data}</td>
+                <td className="px-4 py-3 text-[#374151] max-w-xs truncate">{p.produtos}</td>
+                <td className="px-4 py-3 font-semibold text-[#111827]">R$ {p.valor.toFixed(2)}</td>
                 <td className="px-4 py-3">
-                  <select value={p.status} onChange={async (event) => { const updated = await updateAdminOrderStatus(p.id, event.target.value); setTodos((items) => items.map((item) => item.id === p.id ? { ...item, status: updated.status } : item)); }} className={`text-xs px-2 py-1 rounded-full font-medium border-0 outline-none ${STATUS_COLORS[p.status] || "bg-gray-100 text-gray-500"}`}><option>Recebido</option><option>Em preparacao</option><option>Pronto</option><option>Saiu para entrega</option><option>Entregue</option><option>Cancelado</option></select>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[p.status] || "bg-gray-100 text-gray-500"}`}>{p.status}</span>
                 </td>
               </tr>
             ))}
