@@ -1,25 +1,43 @@
-import { useEffect, useState } from "react";
-import { Search, Plus, ChevronRight, Filter } from "lucide-react";
-import { getAdminClients, type AdminClient } from "../../services/api";
+import { useEffect, useState } from "react"
+import { Search, Plus, ChevronRight, Filter } from "lucide-react"
+
+import { getAdminClients, type AdminClient } from "../../services/api"
 
 export default function Clientes() {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("Todos");
-  const [clientes, setClientes] = useState<AdminClient[]>([]);
-  useEffect(() => { getAdminClients().then((result) => setClientes(result.data)).catch(() => setClientes([])); }, []);
-  const filtered = clientes.filter(c =>
-    (c.nome.toLowerCase().includes(search.toLowerCase()) || c.telefone.includes(search)) &&
-    (statusFilter === "Todos" || c.status === statusFilter)
-  );
+  const [search, setSearch] = useState("")
+
+  const [statusFilter, setStatusFilter] = useState("Todos")
+  const [clientes, setClientes] = useState<AdminClient[]>([])
+  useEffect(() => {
+    getAdminClients()
+      .then((result) => setClientes(result.data))
+      .catch(() => setClientes([]))
+  }, [])
+  const filtered = clientes.filter(
+    (c) =>
+      (c.nome.toLowerCase().includes(search.toLowerCase()) ||
+        c.telefone.includes(search)) &&
+      (statusFilter === "Todos" || c.status === statusFilter),
+  )
 
   return (
     <div className="p-4 md:p-6 space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
         <div>
-          <h1 className="text-xl font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Clientes</h1>
-          <p className="text-sm text-[#6b7280]">{clientes.length} tutores cadastrados</p>
+          <h1
+            className="text-xl font-bold text-[#111827]"
+            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            Clientes
+          </h1>
+          <p className="text-sm text-[#6b7280]">
+            {clientes.length} tutores cadastrados
+          </p>
         </div>
-        <button className="flex items-center gap-2 bg-[#16a34a] hover:bg-[#15803d] text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <button
+          className="flex items-center gap-2 bg-[#16a34a] hover:bg-[#15803d] text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm"
+          style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        >
           <Plus size={16} />
           Novo cliente
         </button>
@@ -28,20 +46,27 @@ export default function Clientes() {
       {/* Filters */}
       <div className="flex gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
+          <Search
+            size={15}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
+          />
           <input
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nome ou telefone..."
             className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-[#e5e7eb] rounded-xl outline-none focus:border-[#16a34a] transition-colors"
           />
         </div>
         <div className="flex bg-[#f3f4f6] rounded-xl p-1 gap-1">
-          {["Todos", "Ativo", "Inativo"].map(s => (
+          {["Todos", "Ativo", "Inativo"].map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${statusFilter === s ? "bg-white text-[#111827] shadow-sm" : "text-[#6b7280]"}`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                statusFilter === s
+                  ? "bg-white text-[#111827] shadow-sm"
+                  : "text-[#6b7280]"
+              }`}
             >
               {s}
             </button>
@@ -54,45 +79,89 @@ export default function Clientes() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#f3f4f6]">
-              {["Nome", "Telefone", "E-mail", "Pets", "Última compra", "Último atendimento", "Status", ""].map((h, idx) => (
-                <th key={h} className={`text-left px-4 py-3 text-xs font-semibold text-[#9ca3af]${idx === 2 || idx === 4 || idx === 5 ? " hidden md:table-cell" : ""}`}>{h}</th>
+              {[
+                "Nome",
+                "Telefone",
+                "E-mail",
+                "Pets",
+                "Última compra",
+                "Último atendimento",
+                "Status",
+                "",
+              ].map((h, idx) => (
+                <th
+                  key={h}
+                  className={`text-left px-4 py-3 text-xs font-semibold text-[#9ca3af]${
+                    idx === 2 || idx === 4 || idx === 5
+                      ? " hidden md:table-cell"
+                      : ""
+                  }`}
+                >
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f3f4f6]">
-            {filtered.map(c => (
-              <tr key={c.id} className="hover:bg-[#fafafa] transition-colors cursor-pointer group">
+            {filtered.map((c) => (
+              <tr
+                key={c.id}
+                className="hover:bg-[#fafafa] transition-colors cursor-pointer group"
+              >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-[#dcfce7] flex items-center justify-center text-xs font-bold text-[#15803d] flex-shrink-0">
-                      {c.nome.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                      {c.nome
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .slice(0, 2)}
                     </div>
                     <span className="font-medium text-[#111827]">{c.nome}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-[#6b7280]">{c.telefone}</td>
-                <td className="hidden md:table-cell px-4 py-3 text-[#6b7280]">{c.email}</td>
-                <td className="px-4 py-3">
-                  <span className="bg-[#f3f4f6] text-[#374151] text-xs px-2 py-0.5 rounded-full font-medium">{c.pets}</span>
+                <td className="hidden md:table-cell px-4 py-3 text-[#6b7280]">
+                  {c.email}
                 </td>
-                <td className="hidden md:table-cell px-4 py-3 text-[#6b7280] text-xs">{c.ultimaCompra}</td>
-                <td className="hidden md:table-cell px-4 py-3 text-[#6b7280] text-xs">{c.ultimoAtendimento}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.status === "Ativo" ? "bg-[#dcfce7] text-[#15803d]" : "bg-gray-100 text-gray-500"}`}>
+                  <span className="bg-[#f3f4f6] text-[#374151] text-xs px-2 py-0.5 rounded-full font-medium">
+                    {c.pets}
+                  </span>
+                </td>
+                <td className="hidden md:table-cell px-4 py-3 text-[#6b7280] text-xs">
+                  {c.ultimaCompra}
+                </td>
+                <td className="hidden md:table-cell px-4 py-3 text-[#6b7280] text-xs">
+                  {c.ultimoAtendimento}
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      c.status === "Ativo"
+                        ? "bg-[#dcfce7] text-[#15803d]"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
                     {c.status}
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <ChevronRight size={15} className="text-[#d1d5db] group-hover:text-[#9ca3af] transition-colors" />
+                  <ChevronRight
+                    size={15}
+                    className="text-[#d1d5db] group-hover:text-[#9ca3af] transition-colors"
+                  />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
         {filtered.length === 0 && (
-          <div className="text-center py-12 text-[#9ca3af] text-sm">Nenhum cliente encontrado.</div>
+          <div className="text-center py-12 text-[#9ca3af] text-sm">
+            Nenhum cliente encontrado.
+          </div>
         )}
       </div>
     </div>
-  );
+  )
 }

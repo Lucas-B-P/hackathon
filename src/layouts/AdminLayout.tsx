@@ -1,41 +1,98 @@
-import { useEffect, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router";
+import { useEffect, useState } from "react"
+import { NavLink, Outlet, useNavigate } from "react-router"
+
 import {
-  LayoutDashboard, Calendar, ShoppingCart, Package, Archive,
-  Users, Dog, Scissors, Stethoscope, DollarSign, UserCheck,
-  BarChart2, Settings, LogOut, ChevronLeft, ChevronRight,
-  ClipboardList, Bath, Bell, Search, Menu, X, PawPrint
-} from "lucide-react";
-import { clearToken, getMe } from "../services/api";
+  LayoutDashboard,
+  Calendar,
+  ShoppingCart,
+  Package,
+  Archive,
+  Users,
+  Dog,
+  Scissors,
+  Stethoscope,
+  DollarSign,
+  UserCheck,
+  BarChart2,
+  Settings,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  Bath,
+  Bell,
+  Search,
+  Menu,
+  X,
+  PawPrint,
+} from "lucide-react"
+import { clearToken, getMe } from "../services/api"
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
+
   { to: "/admin/agenda", label: "Agenda", icon: Calendar },
+
   { to: "/admin/vendas", label: "Vendas / PDV", icon: ShoppingCart },
+
   { to: "/admin/pedidos", label: "Pedidos", icon: ClipboardList },
+
   { to: "/admin/produtos", label: "Produtos", icon: Package },
+
   { to: "/admin/estoque", label: "Estoque", icon: Archive },
+
   { to: "/admin/clientes", label: "Clientes", icon: Users },
+
   { to: "/admin/pets", label: "Pets", icon: Dog },
+
   { to: "/admin/servicos", label: "Serviços", icon: Scissors },
+
   { to: "/admin/banho-tosa", label: "Banho e Tosa", icon: Bath },
+
   { to: "/admin/veterinario", label: "Veterinário", icon: Stethoscope },
+
   { to: "/admin/financeiro", label: "Financeiro", icon: DollarSign },
+
   { to: "/admin/funcionarios", label: "Funcionários", icon: UserCheck },
+
   { to: "/admin/relatorios", label: "Relatórios", icon: BarChart2 },
+
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
-];
+]
 
 export default function AdminLayout() {
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const navigate = useNavigate();
-  const [checkingSession, setCheckingSession] = useState(true);
+  const [collapsed, setCollapsed] = useState(false)
+
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const navigate = useNavigate()
+  const [checkingSession, setCheckingSession] = useState(true)
   useEffect(() => {
-    if (!localStorage.getItem("patinhas_access_token")) { navigate("/", { replace: true }); return; }
-    getMe().then((user) => { if (!["admin", "gerente", "atendente", "caixa", "tosador", "vet"].includes(user.role)) throw new Error("forbidden"); setCheckingSession(false); }).catch(() => { clearToken(); navigate("/", { replace: true }); });
-  }, [navigate]);
-  if (checkingSession) return <div className="min-h-screen bg-[#f8fafc]" />;
+    if (!localStorage.getItem("patinhas_access_token")) {
+      navigate("/", { replace: true })
+      return
+    }
+    getMe()
+      .then((user) => {
+        if (
+          ![
+            "admin",
+            "gerente",
+            "atendente",
+            "caixa",
+            "tosador",
+            "vet",
+          ].includes(user.role)
+        )
+          throw new Error("forbidden")
+        setCheckingSession(false)
+      })
+      .catch(() => {
+        clearToken()
+        navigate("/", { replace: true })
+      })
+  }, [navigate])
+  if (checkingSession) return <div className="min-h-screen bg-[#f8fafc]" />
 
   const SidebarContent = () => (
     <>
@@ -95,7 +152,9 @@ export default function AdminLayout() {
               <span className="text-white text-xs font-bold">JC</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-[#111827] truncate">João Carlos</p>
+              <p className="text-xs font-semibold text-[#111827] truncate">
+                João Carlos
+              </p>
               <p className="text-[11px] text-[#6b7280]">Proprietário</p>
             </div>
             <button
@@ -117,7 +176,7 @@ export default function AdminLayout() {
         )}
       </div>
     </>
-  );
+  )
 
   return (
     <div className="flex h-screen bg-[#f9fafb] overflow-hidden">
@@ -129,7 +188,7 @@ export default function AdminLayout() {
         <SidebarContent />
         {/* Collapse toggle */}
         <button
-          onClick={() => setCollapsed(c => !c)}
+          onClick={() => setCollapsed((c) => !c)}
           className="absolute top-1/2 -translate-y-1/2 translate-x-full w-5 h-10 bg-white border border-[#e5e7eb] rounded-r-lg flex items-center justify-center text-[#9ca3af] hover:text-[#374151] shadow-sm z-10"
           style={{ left: collapsed ? 64 : 228, transition: "left 0.3s" }}
         >
@@ -164,14 +223,20 @@ export default function AdminLayout() {
 
           {/* Mobile logo */}
           <div className="md:hidden flex items-center gap-2">
-            <span className="font-bold text-sm text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            <span
+              className="font-bold text-sm text-[#111827]"
+              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            >
               Patinhas
             </span>
           </div>
 
           {/* Desktop search */}
           <div className="hidden md:block flex-1 relative max-w-sm">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
+            <Search
+              size={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
+            />
             <input
               type="text"
               placeholder="Buscar..."
@@ -199,5 +264,5 @@ export default function AdminLayout() {
         </main>
       </div>
     </div>
-  );
+  )
 }

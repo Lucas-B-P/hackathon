@@ -1,28 +1,45 @@
 import { useState } from "react"
+
 import { Link, useNavigate } from "react-router"
+
 import { Eye, EyeOff, Lock, Mail } from "lucide-react"
+
 import AuthSidebar from "../components/AuthSidebar"
+
 import AuthMobileLogo from "../components/AuthMobileLogo"
+
 import { login } from "../services/api"
 
 export default function Login() {
   const navigate = useNavigate()
+
   const [showPass, setShowPass] = useState(false)
+
   const [email, setEmail] = useState("joao@email.com")
+
   const [senha, setSenha] = useState("")
+
   const [lembrar, setLembrar] = useState(false)
+
   const [error, setError] = useState("")
+
   const [loading, setLoading] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+
     setError("")
+
     setLoading(true)
+
     try {
       const result = await login(email, senha)
+
       navigate(result.user.role === "cliente" ? "/portal" : "/admin")
     } catch (loginError) {
-      setError(loginError instanceof Error ? loginError.message : "Falha ao entrar")
+      setError(
+        loginError instanceof Error ? loginError.message : "Falha ao entrar",
+      )
     } finally {
       setLoading(false)
     }
@@ -36,8 +53,11 @@ export default function Login() {
         featuresLabel="O que você pode fazer aqui"
         features={[
           "Agendar banho, tosa e consultas",
+
           "Acompanhar o histórico dos seus pets",
+
           "Visualizar e rastrear seus pedidos",
+
           "Gerenciar dados e preferências",
         ]}
       />
@@ -47,7 +67,10 @@ export default function Login() {
           <AuthMobileLogo />
 
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-[#111827] mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            <h1
+              className="text-2xl font-bold text-[#111827] mb-1"
+              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            >
               Olá, tutor! 🐾
             </h1>
             <p className="text-[#6b7280] text-sm">
@@ -56,16 +79,24 @@ export default function Login() {
           </div>
 
           {error && (
-            <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2 mb-4">
+            <p
+              role="alert"
+              className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2 mb-4"
+            >
               {error}
             </p>
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-1.5">E-mail</label>
+              <label className="block text-xs font-semibold text-[#374151] mb-1.5">
+                E-mail
+              </label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
+                <Mail
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
+                />
                 <input
                   type="email"
                   value={email}
@@ -76,9 +107,14 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-1.5">Senha</label>
+              <label className="block text-xs font-semibold text-[#374151] mb-1.5">
+                Senha
+              </label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
+                <Lock
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
+                />
                 <input
                   type={showPass ? "text" : "password"}
                   value={senha}
@@ -105,7 +141,10 @@ export default function Login() {
                 />
                 <span className="text-sm text-[#374151]">Lembrar de mim</span>
               </label>
-              <Link to="/esqueci-senha" className="text-sm text-[#16a34a] hover:text-[#15803d] font-medium">
+              <Link
+                to="/esqueci-senha"
+                className="text-sm text-[#16a34a] hover:text-[#15803d] font-medium"
+              >
                 Esqueci minha senha
               </Link>
             </div>
@@ -121,14 +160,20 @@ export default function Login() {
 
           <p className="text-center text-sm text-[#6b7280] mt-5">
             Ainda não possui uma conta?{" "}
-            <Link to="/cadastro" className="text-[#16a34a] font-semibold hover:underline">
+            <Link
+              to="/cadastro"
+              className="text-[#16a34a] font-semibold hover:underline"
+            >
               Criar conta
             </Link>
           </p>
 
           <p className="text-center text-xs text-[#9ca3af] mt-6">
             Problemas para acessar?{" "}
-            <Link to="/contato" className="text-[#16a34a] hover:underline font-medium">
+            <Link
+              to="/contato"
+              className="text-[#16a34a] hover:underline font-medium"
+            >
               Fale conosco
             </Link>
           </p>
