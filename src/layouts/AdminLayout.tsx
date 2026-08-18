@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import {
   LayoutDashboard, Calendar, ShoppingCart, Package, Archive,
@@ -6,6 +6,7 @@ import {
   BarChart2, Settings, LogOut, ChevronLeft, ChevronRight,
   ClipboardList, Bath, Bell, Search, Menu, X, PawPrint
 } from "lucide-react";
+import { clearToken, getMe } from "../services/api";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -29,6 +30,12 @@ export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
+  const [checkingSession, setCheckingSession] = useState(true);
+  useEffect(() => {
+    if (!localStorage.getItem("patinhas_access_token")) { navigate("/", { replace: true }); return; }
+    getMe().then((user) => { if (!["admin", "gerente", "atendente", "caixa", "tosador", "vet"].includes(user.role)) throw new Error("forbidden"); setCheckingSession(false); }).catch(() => { clearToken(); navigate("/", { replace: true }); });
+  }, [navigate]);
+  if (checkingSession) return <div className="min-h-screen bg-[#f8fafc]" />;
 
   const SidebarContent = () => (
     <>

@@ -1,85 +1,50 @@
 import { useState } from "react"
-import { useNavigate } from "react-router"
-import { Eye, EyeOff, Lock, Mail, PawPrint } from "lucide-react"
-import dogHero from "../img/dog-hero.jpg"
+import { Link, useNavigate } from "react-router"
+import { Eye, EyeOff, Lock, Mail } from "lucide-react"
+import AuthSidebar from "../components/AuthSidebar"
+import AuthMobileLogo from "../components/AuthMobileLogo"
+import { login } from "../services/api"
 
 export default function Login() {
   const navigate = useNavigate()
   const [showPass, setShowPass] = useState(false)
   const [email, setEmail] = useState("joao@email.com")
-  const [senha, setSenha] = useState("••••••••")
+  const [senha, setSenha] = useState("")
   const [lembrar, setLembrar] = useState(false)
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    navigate("/portal")
+    setError("")
+    setLoading(true)
+    try {
+      const result = await login(email, senha)
+      navigate(result.user.role === "cliente" ? "/portal" : "/admin")
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "Falha ao entrar")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* Left panel — hidden on mobile, shown on lg+ */}
-      <div
-        className="hidden lg:flex flex-col justify-between lg:w-[440px] xl:w-[480px] bg-[#15803d] flex-shrink-0 relative overflow-hidden"
-        style={{ padding: "48px", margin: "-2px -1px -2px -1px" }}
-      >
-        <div>
-          <div className="flex items-center gap-3 mb-12">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <PawPrint size={22} className="text-white" />
-            </div>
-            <div>
-              <span className="text-white font-bold text-xl" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                Patinhas
-              </span>
-              <span className="text-green-300 font-medium ml-1.5">Pet Shop</span>
-            </div>
-          </div>
+    <div className="auth-page-enter min-h-screen flex flex-col lg:flex-row">
+      <AuthSidebar
+        title="Bem-vindo ao portal exclusivo para tutores"
+        description="Acompanhe seus pets, agende serviços, acompanhe pedidos e muito mais, tudo em um só lugar."
+        featuresLabel="O que você pode fazer aqui"
+        features={[
+          "Agendar banho, tosa e consultas",
+          "Acompanhar o histórico dos seus pets",
+          "Visualizar e rastrear seus pedidos",
+          "Gerenciar dados e preferências",
+        ]}
+      />
 
-          <h2 className="text-white text-3xl font-bold leading-tight mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Bem-vindo ao portal exclusivo para tutores
-          </h2>
-          <p className="text-green-200 text-base leading-relaxed">
-            Acompanhe seus pets, agende serviços, acompanhe pedidos e muito mais, tudo em um só lugar.
-          </p>
-
-        </div>
-
-        <div className="space-y-3">
-          <p className="text-green-300 text-xs font-semibold uppercase tracking-wider">
-            O que você pode fazer aqui
-          </p>
-          <div className="space-y-2">
-            {[
-              "Agendar banho, tosa e consultas",
-              "Acompanhar o histórico dos seus pets",
-              "Visualizar e rastrear seus pedidos",
-              "Gerenciar dados e preferências",
-            ].map((item) => (
-              <div key={item} className="flex items-center gap-2.5 text-green-100 text-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
-                {item}
-              </div>
-            ))}
-          </div>
-          <p className="text-green-400 text-xs mt-4 pt-4 border-t border-white/10">
-            Powered by <span className="font-semibold text-white">Petzio ERP</span>
-          </p>
-        </div>
-
-      </div>
-
-      {/* Right panel */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-[#f9fafb] min-h-screen lg:min-h-0">
         <div className="w-full max-w-[380px]">
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2 mb-10 lg:hidden">
-            <div className="w-9 h-9 rounded-xl bg-[#16a34a] flex items-center justify-center">
-              <PawPrint size={18} className="text-white" />
-            </div>
-            <span className="font-bold text-lg text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              Patinhas Pet Shop
-            </span>
-          </div>
+          <AuthMobileLogo />
 
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-[#111827] mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -89,6 +54,12 @@ export default function Login() {
               Entre com suas credenciais para acessar o portal.
             </p>
           </div>
+
+          {error && (
+            <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2 mb-4">
+              {error}
+            </p>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
@@ -134,9 +105,9 @@ export default function Login() {
                 />
                 <span className="text-sm text-[#374151]">Lembrar de mim</span>
               </label>
-              <button type="button" className="text-sm text-[#16a34a] hover:text-[#15803d] font-medium">
+              <Link to="/esqueci-senha" className="text-sm text-[#16a34a] hover:text-[#15803d] font-medium">
                 Esqueci minha senha
-              </button>
+              </Link>
             </div>
 
             <button
@@ -144,13 +115,22 @@ export default function Login() {
               className="w-full py-3 bg-[#16a34a] hover:bg-[#15803d] text-white font-semibold text-sm rounded-xl transition-colors shadow-sm mt-2"
               style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
             >
-              Entrar no Portal
+              {loading ? "Entrando..." : "Entrar no Portal"}
             </button>
           </form>
 
+          <p className="text-center text-sm text-[#6b7280] mt-5">
+            Ainda não possui uma conta?{" "}
+            <Link to="/cadastro" className="text-[#16a34a] font-semibold hover:underline">
+              Criar conta
+            </Link>
+          </p>
+
           <p className="text-center text-xs text-[#9ca3af] mt-6">
             Problemas para acessar?{" "}
-            <button className="text-[#16a34a] hover:underline font-medium">Fale conosco</button>
+            <Link to="/contato" className="text-[#16a34a] hover:underline font-medium">
+              Fale conosco
+            </Link>
           </p>
         </div>
       </div>

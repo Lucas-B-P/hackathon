@@ -1,97 +1,62 @@
-import { useState } from "react"
-
-import { Link, useNavigate } from "react-router"
-
-import { Calendar, CreditCard, Lock, Mail, Phone, User } from "lucide-react"
-
-import AuthSidebar from "../components/AuthSidebar"
-
-import AuthMobileLogo from "../components/AuthMobileLogo"
-
-import { register } from "../services/api"
+import { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { Calendar, CreditCard, Lock, Mail, Phone, User } from "lucide-react";
+import AuthSidebar from "../components/AuthSidebar";
+import AuthMobileLogo from "../components/AuthMobileLogo";
+import { register } from "../services/api";
 
 type PasswordStrength = {
-  score: 0 | 1 | 2 | 3 | 4
-
-  label: string
-
-  color: string
-}
+  score: 0 | 1 | 2 | 3 | 4;
+  label: string;
+  color: string;
+};
 
 function getPasswordStrength(password: string): PasswordStrength {
-  if (!password) return { score: 0, label: "", color: "#e5e7eb" }
+  if (!password) return { score: 0, label: "", color: "#e5e7eb" };
 
-  let points = 0
+  let points = 0;
+  if (password.length >= 6) points++;
+  if (password.length >= 8) points++;
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) points++;
+  if (/\d/.test(password)) points++;
+  if (/[^a-zA-Z0-9]/.test(password)) points++;
 
-  if (password.length >= 6) points++
-
-  if (password.length >= 8) points++
-
-  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) points++
-
-  if (/\d/.test(password)) points++
-
-  if (/[^a-zA-Z0-9]/.test(password)) points++
-
-  if (points <= 1) return { score: 1, label: "Fraca", color: "#ef4444" }
-
-  if (points <= 2) return { score: 2, label: "Razoável", color: "#f97316" }
-
-  if (points <= 3) return { score: 3, label: "Boa", color: "#eab308" }
-
-  return { score: 4, label: "Forte", color: "#16a34a" }
+  if (points <= 1) return { score: 1, label: "Fraca", color: "#ef4444" };
+  if (points <= 2) return { score: 2, label: "Razoável", color: "#f97316" };
+  if (points <= 3) return { score: 3, label: "Boa", color: "#eab308" };
+  return { score: 4, label: "Forte", color: "#16a34a" };
 }
 
 export default function Register() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const [nome, setNome] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [nascimento, setNascimento] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [confirmacao, setConfirmacao] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const [nome, setNome] = useState("")
-
-  const [cpf, setCpf] = useState("")
-
-  const [telefone, setTelefone] = useState("")
-
-  const [nascimento, setNascimento] = useState("")
-
-  const [email, setEmail] = useState("")
-
-  const [senha, setSenha] = useState("")
-
-  const [confirmacao, setConfirmacao] = useState("")
-
-  const [error, setError] = useState("")
-
-  const [loading, setLoading] = useState(false)
-
-  const passwordStrength = getPasswordStrength(senha)
-
-  const maxBirthDate = new Date().toISOString().slice(0, 10)
+  const passwordStrength = getPasswordStrength(senha);
+  const maxBirthDate = new Date().toISOString().slice(0, 10);
 
   async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
-
-    setError("")
-
+    event.preventDefault();
+    setError("");
     if (senha !== confirmacao) {
-      setError("As senhas não conferem")
-
-      return
+      setError("As senhas não conferem");
+      return;
     }
-
-    setLoading(true)
-
+    setLoading(true);
     try {
-      await register({ nome, email, senha, cpf, telefone, nascimento })
-
-      navigate("/portal")
+      await register({ nome, email, senha, cpf, telefone, nascimento });
+      navigate("/portal");
     } catch (registerError) {
-      setError(
-        registerError instanceof Error
-          ? registerError.message
-          : "Falha ao criar conta",
-      )
+      setError(registerError instanceof Error ? registerError.message : "Falha ao criar conta");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -102,9 +67,7 @@ export default function Register() {
         description="Cadastre-se gratuitamente e tenha tudo o que precisa para acompanhar a saúde e o bem-estar do seu companheiro."
         features={[
           "Agende serviços com facilidade",
-
           "Acompanhe o histórico do seu pet",
-
           "Receba novidades e benefícios",
         ]}
       />
@@ -114,36 +77,23 @@ export default function Register() {
           <AuthMobileLogo />
 
           <div className="mb-8">
-            <h1
-              className="text-2xl font-bold text-[#111827] mb-1"
-              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-            >
+            <h1 className="text-2xl font-bold text-[#111827] mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
               Crie sua conta 🐾
             </h1>
-            <p className="text-[#6b7280] text-sm">
-              Cadastre-se e acompanhe seus pets em um só lugar.
-            </p>
+            <p className="text-[#6b7280] text-sm">Cadastre-se e acompanhe seus pets em um só lugar.</p>
           </div>
 
           {error && (
-            <p
-              role="alert"
-              className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2 mb-4"
-            >
+            <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2 mb-4">
               {error}
             </p>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-1.5">
-                Nome completo
-              </label>
+              <label className="block text-xs font-semibold text-[#374151] mb-1.5">Nome completo</label>
               <div className="relative">
-                <User
-                  size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
-                />
+                <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
                 <input
                   required
                   placeholder="Ex.: João Silva"
@@ -155,14 +105,9 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-1.5">
-                CPF
-              </label>
+              <label className="block text-xs font-semibold text-[#374151] mb-1.5">CPF</label>
               <div className="relative">
-                <CreditCard
-                  size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
-                />
+                <CreditCard size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
                 <input
                   required
                   inputMode="numeric"
@@ -176,14 +121,9 @@ export default function Register() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-[#374151] mb-1.5">
-                  Telefone
-                </label>
+                <label className="block text-xs font-semibold text-[#374151] mb-1.5">Telefone</label>
                 <div className="relative">
-                  <Phone
-                    size={16}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
-                  />
+                  <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
                   <input
                     required
                     type="tel"
@@ -196,14 +136,9 @@ export default function Register() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#374151] mb-1.5">
-                  Data de nascimento
-                </label>
+                <label className="block text-xs font-semibold text-[#374151] mb-1.5">Data de nascimento</label>
                 <div className="relative">
-                  <Calendar
-                    size={16}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
-                  />
+                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
                   <input
                     required
                     type="date"
@@ -217,14 +152,9 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-1.5">
-                E-mail
-              </label>
+              <label className="block text-xs font-semibold text-[#374151] mb-1.5">E-mail</label>
               <div className="relative">
-                <Mail
-                  size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
-                />
+                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
                 <input
                   required
                   type="email"
@@ -237,14 +167,9 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-1.5">
-                Senha
-              </label>
+              <label className="block text-xs font-semibold text-[#374151] mb-1.5">Senha</label>
               <div className="relative">
-                <Lock
-                  size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
-                />
+                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
                 <input
                   required
                   minLength={6}
@@ -263,18 +188,12 @@ export default function Register() {
                         key={level}
                         className="flex-1 rounded-full transition-colors duration-300"
                         style={{
-                          backgroundColor:
-                            level <= passwordStrength.score
-                              ? passwordStrength.color
-                              : "#e5e7eb",
+                          backgroundColor: level <= passwordStrength.score ? passwordStrength.color : "#e5e7eb",
                         }}
                       />
                     ))}
                   </div>
-                  <p
-                    className="text-xs mt-1.5 font-medium"
-                    style={{ color: passwordStrength.color }}
-                  >
+                  <p className="text-xs mt-1.5 font-medium" style={{ color: passwordStrength.color }}>
                     Senha {passwordStrength.label.toLowerCase()}
                   </p>
                 </div>
@@ -282,14 +201,9 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-1.5">
-                Confirme a senha
-              </label>
+              <label className="block text-xs font-semibold text-[#374151] mb-1.5">Confirme a senha</label>
               <div className="relative">
-                <Lock
-                  size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
-                />
+                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
                 <input
                   required
                   minLength={6}
@@ -314,25 +228,19 @@ export default function Register() {
 
           <p className="text-center text-sm text-[#6b7280] mt-5">
             Já possui uma conta?{" "}
-            <Link
-              to="/"
-              className="text-[#16a34a] font-semibold hover:underline"
-            >
+            <Link to="/" className="text-[#16a34a] font-semibold hover:underline">
               Entrar
             </Link>
           </p>
 
           <p className="text-center text-xs text-[#9ca3af] mt-6">
             Problemas para acessar?{" "}
-            <Link
-              to="/contato"
-              className="text-[#16a34a] hover:underline font-medium"
-            >
+            <Link to="/contato" className="text-[#16a34a] hover:underline font-medium">
               Fale conosco
             </Link>
           </p>
         </div>
       </div>
     </div>
-  )
+  );
 }

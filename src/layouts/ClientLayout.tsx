@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import { Home, Calendar, ShoppingBag, Dog, User, LogOut, Bell, Store, PawPrint, Check, Tag, Clock, Stethoscope } from "lucide-react";
+import { clearToken, getMe, getNotifications, markAllNotificationsRead, markNotificationRead, type Notification } from "../services/api";
 
 const navItems = [
   { to: "/portal", label: "Início", icon: Home, end: true },
@@ -62,23 +63,34 @@ const NOTIFICATIONS = [
 export default function ClientLayout() {
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
-  const [readIds, setReadIds] = useState<number[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const notifRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!localStorage.getItem("patinhas_access_token")) { navigate("/", { replace: true }); return; }
+    getMe().then(() => setSessionLoading(false)).catch(() => { clearToken(); navigate("/", { replace: true }); });
+  }, [navigate]);
+
+  useEffect(() => {
+    const loadNotifications = () => getNotifications().then((result) => setNotifications(result.data)).catch(() => setNotifications([]));
+    loadNotifications();
+    const interval = window.setInterval(loadNotifications, 5000);
     function handler(e: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setNotifOpen(false);
       }
     }
     document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    return () => { document.removeEventListener("mousedown", handler); window.clearInterval(interval); };
   }, []);
 
-  const unreadCount = NOTIFICATIONS.filter(n => n.unread && !readIds.includes(n.id)).length;
+  const unreadCount = notifications.filter((notification) => !notification.read_at).length;
+
+  if (sessionLoading) return <div className="min-h-screen bg-[#f9fafb] flex items-center justify-center text-sm text-[#6b7280]">Validando sessão...</div>;
 
   function markAllRead() {
-    setReadIds(NOTIFICATIONS.map(n => n.id));
+    markAllNotificationsRead().then(() => setNotifications((items) => items.map((item) => ({ ...item, read_at: new Date().toISOString() }))));
   }
 
   return (
@@ -149,21 +161,23 @@ export default function ClientLayout() {
                     )}
                   </div>
                   <div className="max-h-80 overflow-y-auto divide-y divide-[#f3f4f6]">
-                    {NOTIFICATIONS.map(n => {
-                      const isUnread = n.unread && !readIds.includes(n.id);
+                    {notifications.map(n => {
+                      const isUnread = !n.read_at;
+                      const Icon = n.type === "agendamento" ? Calendar : n.type === "pet" ? PawPrint : n.type === "pedido" ? Clock : Bell;
+                      const color = n.type === "agendamento" ? "bg-[#dcfce7] text-[#16a34a]" : n.type === "pet" ? "bg-blue-50 text-blue-600" : n.type === "pedido" ? "bg-violet-50 text-violet-600" : "bg-amber-50 text-amber-600";
                       return (
                         <button
                           key={n.id}
-                          onClick={() => setReadIds(r => [...r, n.id])}
+                          onClick={() => { if (isUnread) { markNotificationRead(n.id); setNotifications((items) => items.map((item) => item.id === n.id ? { ...item, read_at: new Date().toISOString() } : item)); } }}
                           className={`w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-[#f9fafb] transition-colors ${isUnread ? "bg-[#f0fdf4]" : ""}`}
                         >
-                          <div className={`p-2 rounded-xl flex-shrink-0 mt-0.5 ${n.color}`}>
-                            <n.icon size={14} />
+                          <div className={`p-2 rounded-xl flex-shrink-0 mt-0.5 ${color}`}>
+                            <Icon size={14} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-[#111827] leading-tight">{n.title}</p>
-                            <p className="text-xs text-[#6b7280] mt-0.5 leading-snug">{n.desc}</p>
-                            <p className="text-[11px] text-[#9ca3af] mt-1">{n.time}</p>
+                            <p className="text-xs text-[#6b7280] mt-0.5 leading-snug">{n.description}</p>
+                            <p className="text-[11px] text-[#9ca3af] mt-1">{new Date(n.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</p>
                           </div>
                           {isUnread && <div className="w-2 h-2 rounded-full bg-[#16a34a] flex-shrink-0 mt-2" />}
                         </button>
@@ -189,7 +203,7 @@ export default function ClientLayout() {
       </header>
 
       {/* Page content */}
-      <main className="max-w-6xl mx-auto px-4 md:px-6 py-5 md:py-8" style={{ overflow: "visible" }}>
+      <main className="max-w-6xl mx-auto px-4 md:px-6 py-5 md:py-8">
         <Outlet />
       </main>
 

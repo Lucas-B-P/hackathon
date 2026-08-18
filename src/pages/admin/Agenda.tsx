@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, Clock } from "lucide-react";
-import { agendamentos } from "../../data/mockData";
+import { getAdminAppointments, type AdminAppointment } from "../../services/api";
 
 const STATUS_COLORS: Record<string, string> = {
   Agendado: "bg-[#dcfce7] text-[#15803d] border-[#86efac]",
@@ -26,6 +26,8 @@ type View = "dia" | "semana" | "mes";
 export default function Agenda() {
   const [view, setView] = useState<View>("semana");
   const [modalOpen, setModalOpen] = useState(false);
+  const [agendamentos, setAgendamentos] = useState<AdminAppointment[]>([]);
+  useEffect(() => { getAdminAppointments().then((result) => setAgendamentos(result.data)).catch(() => setAgendamentos([])); }, []);
 
   return (
     <div className="p-4 md:p-6 space-y-4">

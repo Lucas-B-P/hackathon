@@ -1,23 +1,14 @@
 import { PawPrint } from "lucide-react"
-
 import dogHero from "../img/dog-hero.jpg"
 
 type AuthSidebarProps = {
   title: string
-
   description: string
-
   featuresLabel?: string
-
   features?: string[]
 }
 
-export default function AuthSidebar({
-  title,
-  description,
-  featuresLabel,
-  features,
-}: AuthSidebarProps) {
+export default function AuthSidebar({ title, description, featuresLabel, features }: AuthSidebarProps) {
   return (
     <div
       className="hidden lg:flex flex-col justify-between lg:w-[440px] xl:w-[480px] bg-[#15803d] flex-shrink-0 relative overflow-hidden"
@@ -29,10 +20,7 @@ export default function AuthSidebar({
             <PawPrint size={22} className="text-white" />
           </div>
           <div>
-            <span
-              className="text-white font-bold text-xl"
-              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-            >
+            <span className="text-white font-bold text-xl" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
               Patinhas
             </span>
             <span className="text-green-300 font-medium ml-1.5">Pet Shop</span>
@@ -40,17 +28,10 @@ export default function AuthSidebar({
         </div>
 
         <div className="pt-10">
-          <h2
-            className="text-white text-3xl font-bold leading-tight mb-4"
-            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-          >
+          <h2 className="text-white text-3xl font-bold leading-tight mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             {title}
           </h2>
-          <p
-            className={`text-green-200 text-base leading-relaxed ${
-              features?.length ? "mb-10" : ""
-            }`}
-          >
+          <p className={`text-green-200 text-base leading-relaxed ${features?.length ? "mb-10" : ""}`}>
             {description}
           </p>
 
@@ -63,10 +44,7 @@ export default function AuthSidebar({
               )}
               <div className="space-y-2">
                 {features.map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-center gap-2.5 text-green-100 text-sm"
-                  >
+                  <div key={item} className="flex items-center gap-2.5 text-green-100 text-sm">
                     <div className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
                     {item}
                   </div>

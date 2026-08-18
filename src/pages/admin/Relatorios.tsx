@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Download, BarChart2, X, Check, FileText } from "lucide-react";
-import { faturamentoMensal, vendasCategoria } from "../../data/mockData";
+import { Download, BarChart2 } from "lucide-react";
+import { getAdminReports, type AdminReports } from "../../services/api";
 
 const CATS = ["Vendas", "Financeiro", "Estoque", "Produtos", "Serviços", "Clientes", "Pets", "Funcionários"];
 const COLORS = ["#16a34a", "#86efac", "#4ade80", "#bbf7d0", "#dcfce7"];
@@ -18,14 +18,10 @@ const servicosData = [
 export default function Relatorios() {
   const [cat, setCat] = useState("Vendas");
   const [periodo, setPeriodo] = useState("mes");
-  const [exportOpen, setExportOpen] = useState(false);
-  const [exportForm, setExportForm] = useState({ formato: "PDF", periodo: "mes", modulo: "Vendas" });
-  const [exported, setExported] = useState(false);
-
-  function handleExport() {
-    setExported(true);
-    setTimeout(() => { setExported(false); setExportOpen(false); }, 1800);
-  }
+  const [reports, setReports] = useState<AdminReports | null>(null);
+  useEffect(() => { getAdminReports().then((result) => setReports(result.data)).catch(() => setReports(null)); }, []);
+  const faturamentoMensal = reports?.revenue ?? [];
+  const servicosData = reports?.services ?? [];
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -34,7 +30,7 @@ export default function Relatorios() {
           <h1 className="text-xl font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Relatórios</h1>
           <p className="text-sm text-[#6b7280]">Central de análises e exportações</p>
         </div>
-        <button onClick={() => setExportOpen(true)} className="flex items-center gap-2 border border-[#e5e7eb] bg-white hover:bg-[#f3f4f6] text-[#374151] px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm">
+        <button className="flex items-center gap-2 border border-[#e5e7eb] bg-white hover:bg-[#f3f4f6] text-[#374151] px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm">
           <Download size={16} />
           Exportar relatório
         </button>
@@ -139,7 +135,7 @@ export default function Relatorios() {
                   <td className="px-4 py-3 font-semibold text-[#111827]">R$ {lucro.toLocaleString("pt-BR")}</td>
                   <td className="px-4 py-3">
                     <span className="text-xs bg-[#dcfce7] text-[#15803d] px-2 py-0.5 rounded-full font-medium">
-                      +{((lucro / m.despesas) * 100).toFixed(0)}%
+                      {m.despesas > 0 ? `+${((lucro / m.despesas) * 100).toFixed(0)}%` : "—"}
                     </span>
                   </td>
                 </tr>
@@ -148,58 +144,6 @@ export default function Relatorios() {
           </tbody>
         </table>
       </div>
-
-      {/* Modal Exportar Relatório */}
-      {exportOpen && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
-            <div className="flex items-center justify-between p-5 border-b border-[#f3f4f6]">
-              <h2 className="text-lg font-bold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Exportar relatório</h2>
-              <button onClick={() => setExportOpen(false)} className="p-2 hover:bg-[#f3f4f6] rounded-xl text-[#9ca3af]"><X size={20} /></button>
-            </div>
-            {exported ? (
-              <div className="p-10 flex flex-col items-center gap-3">
-                <div className="w-14 h-14 rounded-full bg-[#dcfce7] flex items-center justify-center"><Check size={28} className="text-[#16a34a]" /></div>
-                <p className="font-semibold text-[#111827]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Relatório exportado!</p>
-                <p className="text-xs text-[#9ca3af]">O download será iniciado em instantes</p>
-              </div>
-            ) : (
-              <div className="p-5 space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-[#374151] mb-1.5">Módulo</label>
-                  <select value={exportForm.modulo} onChange={e => setExportForm(f => ({ ...f, modulo: e.target.value }))} className="w-full px-3 py-2.5 border border-[#e5e7eb] rounded-xl text-sm outline-none focus:border-[#16a34a] bg-white">
-                    {CATS.map(c => <option key={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-[#374151] mb-2">Período</label>
-                  <div className="flex bg-[#f3f4f6] rounded-xl p-1 gap-1">
-                    {[["dia", "Hoje"], ["semana", "Semana"], ["mes", "Mês"], ["ano", "Ano"]].map(([v, l]) => (
-                      <button key={v} onClick={() => setExportForm(f => ({ ...f, periodo: v }))} className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-all ${exportForm.periodo === v ? "bg-white text-[#111827] shadow-sm" : "text-[#6b7280]"}`}>{l}</button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-[#374151] mb-2">Formato</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {["PDF", "Excel", "CSV"].map(fmt => (
-                      <button key={fmt} onClick={() => setExportForm(f => ({ ...f, formato: fmt }))} className={`py-2.5 rounded-xl text-sm font-medium border-2 flex items-center justify-center gap-1.5 transition-all ${exportForm.formato === fmt ? "border-[#16a34a] bg-[#f0fdf4] text-[#16a34a]" : "border-[#e5e7eb] text-[#374151]"}`}>
-                        <FileText size={13} />{fmt}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex gap-3 pt-1">
-                  <button onClick={() => setExportOpen(false)} className="flex-1 py-2.5 border border-[#e5e7eb] rounded-xl text-sm font-medium text-[#374151] hover:bg-[#f3f4f6]">Cancelar</button>
-                  <button onClick={handleExport} className="flex-1 py-2.5 bg-[#16a34a] hover:bg-[#15803d] text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                    <Download size={15} />Exportar
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
