@@ -208,6 +208,10 @@ export default function Loja() {
                           <Plus size={16} />
                         </button>
                       </div>
+                    ) : product.stock <= 0 ? (
+                      <button disabled className="w-full bg-[#f3f4f6] text-[#9ca3af] text-sm font-semibold py-2.5 rounded-xl cursor-not-allowed" title="Este produto está sem estoque">
+                        Produto sem estoque
+                      </button>
                     ) : (
                       <button
                         onClick={() => addToCart(product)}
